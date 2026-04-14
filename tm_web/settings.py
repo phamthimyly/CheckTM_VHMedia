@@ -137,3 +137,8 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "").strip()
 GOOGLE_CSE_ID = os.getenv("GOOGLE_CSE_ID", os.getenv("SEARCH_ENGINE_ID", "")).strip()
+DEBUG = False
+
+ALLOWED_HOSTS = ["*"]
+import os
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
