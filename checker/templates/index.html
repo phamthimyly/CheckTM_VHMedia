@@ -1,0 +1,1867 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trademark Checker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --surface: rgba(255, 255, 255, 0.88);
+            --surface-strong: #ffffff;
+            --line: #f1d5bb;
+            --line-strong: #f2b37d;
+            --text: #22160f;
+            --muted: #7d6856;
+            --accent: #d86e1f;
+            --accent-dark: #8f430c;
+            --accent-soft: #fff0e2;
+            --danger: #cf3f2d;
+            --warning: #d69713;
+            --ok: #249764;
+            --shadow: 0 24px 60px rgba(152, 91, 29, 0.16);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Inter", "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(245, 173, 92, 0.18), transparent 35%),
+                radial-gradient(circle at bottom right, rgba(227, 130, 46, 0.16), transparent 30%),
+                linear-gradient(135deg, #ffffff 0%, #fff5eb 55%, #ffe8d4 100%);
+        }
+
+        .page {
+            width: 100%;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 330px minmax(0, 1fr);
+            gap: 22px;
+            padding: 22px;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 22px;
+            align-self: start;
+            min-height: calc(100vh - 44px);
+            padding: 24px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 26px;
+        }
+
+        .sidebar-logo {
+            width: 58px;
+            height: 58px;
+            flex: 0 0 auto;
+            object-fit: contain;
+            border-radius: 12px;
+            background: #fff;
+            padding: 6px;
+            box-shadow: 0 10px 24px rgba(61, 34, 10, 0.11);
+        }
+
+        .sidebar-title {
+            margin: 0 0 4px;
+            font-family: "Poppins", "Inter", sans-serif;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        .sidebar-subtitle {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.8rem;
+            line-height: 1.35;
+        }
+
+        .side-nav {
+            display: grid;
+            gap: 12px;
+        }
+
+        .side-nav a {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            min-height: 46px;
+            padding: 0 14px;
+            border-radius: 10px;
+            background: transparent;
+            color: #4a4038;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+        }
+
+        .side-nav a:hover {
+            background: rgba(216, 110, 31, 0.08);
+            color: var(--accent-dark);
+        }
+
+        .side-nav a.is-active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            flex: 0 0 auto;
+            stroke: currentColor;
+            stroke-width: 2.05;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sidebar-bottom {
+            display: grid;
+            gap: 8px;
+            margin-top: auto;
+            padding-top: 24px;
+        }
+
+        .sidebar-bottom a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 42px;
+            padding: 0 14px;
+            border-radius: 10px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .sidebar-bottom a:hover {
+            background: rgba(34, 22, 15, 0.04);
+            color: var(--accent-dark);
+        }
+
+        .content {
+            min-width: 0;
+        }
+
+        .tab-section.is-hidden {
+            display: none !important;
+        }
+
+        .hero,
+        .panel {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .hero {
+            padding: 40px;
+            margin-bottom: 28px;
+        }
+
+        .hero-top {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .brand-logo {
+            width: 110px;
+            height: 110px;
+            object-fit: contain;
+            border-radius: 20px;
+            background: #fff;
+            padding: 10px;
+            box-shadow: 0 14px 32px rgba(61, 34, 10, 0.14);
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .brand-name {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--accent-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--accent-dark);
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
+        h1, h2 { margin: 0; line-height: 1.1; }
+
+        h1 {
+            font-family: "Poppins", "Inter", sans-serif;
+            font-size: clamp(2rem, 3.3vw, 2.25rem);
+            margin-bottom: 12px;
+        }
+
+        .lead {
+            margin: 0;
+            max-width: 760px;
+            color: var(--muted);
+            font-size: clamp(1rem, 2vw, 1.1rem);
+            font-weight: 400;
+        }
+
+        .panel { padding: 28px; }
+
+        form {
+            display: grid;
+            gap: 18px;
+            margin-top: 24px;
+        }
+
+        .search-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            border: 1.5px solid var(--line);
+            border-radius: 18px;
+            padding: 18px 20px;
+            font-size: 0.96rem;
+            color: var(--text);
+            background: var(--surface-strong);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--line-strong);
+            box-shadow: 0 0 0 4px rgba(216, 110, 31, 0.12);
+        }
+
+        button {
+            border: none;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #df7a2d 0%, #ca6b22 100%);
+            color: white;
+            padding: 0 28px;
+            font-size: 0.96rem;
+            font-weight: 700;
+            cursor: pointer;
+            min-width: 152px;
+            transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+            box-shadow: 0 14px 30px rgba(202, 107, 34, 0.22);
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.85;
+            cursor: wait;
+        }
+
+        .hint,
+        .error {
+            padding: 15px 17px;
+            border-radius: 16px;
+            font-size: 0.92rem;
+        }
+
+        .hint {
+            background: rgba(216, 110, 31, 0.08);
+            color: var(--accent-dark);
+        }
+
+        .error {
+            background: rgba(159, 47, 28, 0.08);
+            color: var(--danger);
+        }
+
+        .quick-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--accent-dark);
+            padding: 8px 14px;
+            font-size: 0.88rem;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: none;
+        }
+
+        .history-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .history-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0;
+            margin: 0;
+        }
+
+        .history-item form {
+            margin: 0;
+            display: block;
+        }
+
+        .history-search {
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.86);
+            color: var(--accent-dark);
+            padding: 8px 14px;
+            font-size: 0.88rem;
+            box-shadow: none;
+            min-width: auto;
+        }
+
+        .history-delete,
+        .history-clear {
+            border-radius: 999px;
+            padding: 8px 12px;
+            min-width: auto;
+            box-shadow: none;
+            background: rgba(207, 63, 45, 0.12);
+            color: var(--danger);
+            font-size: 0.82rem;
+        }
+
+        .history-clear {
+            background: rgba(216, 110, 31, 0.12);
+            color: var(--accent-dark);
+        }
+
+        .loading-note {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            color: var(--accent-dark);
+            font-size: 0.92rem;
+            font-weight: 600;
+        }
+
+        .loading-note .spinner {
+            display: inline-block;
+            border-color: rgba(216, 110, 31, 0.25);
+            border-top-color: var(--accent);
+        }
+
+        .grid {
+            display: grid;
+            gap: 22px;
+            margin-top: 28px;
+            grid-template-columns: repeat(12, 1fr);
+        }
+
+        .summary-card,
+        .trademark-card,
+        .results-card {
+            grid-column: span 12;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1.5px solid rgba(216, 110, 31, 0.16);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 18px 42px rgba(61, 34, 10, 0.08);
+        }
+
+        .section-title {
+            font-family: "Poppins", "Inter", sans-serif;
+            font-size: clamp(2rem, 3vw, 2.25rem);
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: #1d130c;
+            line-height: 1.14;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .title-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .title-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 800;
+            background: linear-gradient(180deg, #fff4ea 0%, #ffe2c7 100%);
+            border: 1px solid rgba(216, 110, 31, 0.16);
+            color: var(--accent-dark);
+            flex: 0 0 auto;
+        }
+
+        .title-icon.high {
+            background: rgba(207, 63, 45, 0.12);
+            color: var(--danger);
+            border-color: rgba(207, 63, 45, 0.18);
+        }
+
+        .title-icon.medium {
+            background: rgba(214, 151, 19, 0.14);
+            color: var(--warning);
+            border-color: rgba(214, 151, 19, 0.18);
+        }
+
+        .title-icon.low {
+            background: rgba(36, 151, 100, 0.12);
+            color: var(--ok);
+            border-color: rgba(36, 151, 100, 0.18);
+        }
+
+        .overview-text {
+            font-size: 0.94rem;
+            line-height: 1.7;
+            color: #3b2b1f;
+            font-weight: 400;
+        }
+
+        .info-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0 14px;
+        }
+
+        .info-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(216, 110, 31, 0.1);
+            color: var(--accent-dark);
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .summary-media {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 18px;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .summary-media.no-image {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-thumb {
+            width: 100%;
+            border-radius: 18px;
+            object-fit: cover;
+            aspect-ratio: 1 / 1;
+            border: 1px solid rgba(216, 110, 31, 0.14);
+            box-shadow: 0 12px 28px rgba(61, 34, 10, 0.12);
+            background: #fff8f2;
+        }
+
+        .results-card li,
+        .summary-card li,
+        .trademark-card li {
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .trademark-card .section-title {
+            font-size: clamp(1.55rem, 2.4vw, 1.95rem);
+            max-width: 16ch;
+        }
+
+        .results-card .section-title {
+            font-size: clamp(1.35rem, 2vw, 1.65rem);
+        }
+
+        .results-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .results-list li {
+            padding: 14px 0;
+            border-top: 1px solid rgba(216, 110, 31, 0.12);
+        }
+
+        .results-list li:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .results-list a {
+            display: inline-block;
+            font-weight: 700;
+            font-size: 0.98rem;
+            line-height: 1.45;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            text-decoration: none;
+        }
+
+        .results-list a:hover {
+            text-decoration: underline;
+        }
+
+        .result-title-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-favicon {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            flex: 0 0 auto;
+            background: #fff;
+            border: 1px solid rgba(34, 22, 15, 0.08);
+        }
+
+        .score {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 16px 0 14px;
+            padding: 14px 18px;
+            border-radius: 999px;
+            background: rgba(35, 24, 14, 0.06);
+            font-weight: 800;
+            font-size: 0.98rem;
+        }
+
+        .score.high { color: var(--danger); }
+        .score.medium { color: var(--accent-dark); }
+        .score.low { color: var(--ok); }
+
+        .risk-box {
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin: 16px 0 18px;
+            background: #fff;
+            border: 1px solid rgba(34, 22, 15, 0.06);
+            border-left: 5px solid rgba(216, 110, 31, 0.2);
+        }
+
+        .risk-box.high { border-left-color: var(--danger); }
+        .risk-box.medium { border-left-color: var(--warning); }
+        .risk-box.low { border-left-color: var(--ok); }
+
+        .risk-box-title {
+            margin: 0 0 8px;
+            font-size: 1.05rem;
+            font-weight: 800;
+        }
+
+        .risk-box.high .risk-box-title { color: var(--danger); }
+        .risk-box.medium .risk-box-title { color: var(--warning); }
+        .risk-box.low .risk-box-title { color: var(--ok); }
+
+        .smart-block {
+            margin-top: 14px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(255, 248, 241, 0.72);
+            border: 1px solid rgba(216, 110, 31, 0.14);
+        }
+
+        .smart-title {
+            margin: 0 0 10px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--accent-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .smart-text {
+            margin: 0;
+            font-size: 0.9rem;
+            line-height: 1.65;
+            color: #3b2b1f;
+        }
+
+        .mini-grid {
+            display: grid;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .mini-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid rgba(34, 22, 15, 0.06);
+            font-size: 0.86rem;
+        }
+
+        .mini-row strong {
+            color: var(--accent-dark);
+        }
+
+        .source-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0 12px;
+        }
+
+        .source-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 0 14px;
+            border-radius: 999px;
+            background: rgba(216, 110, 31, 0.12);
+            border: 1px solid rgba(216, 110, 31, 0.28);
+            color: var(--accent-dark);
+            font-size: 0.88rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .source-link:hover {
+            background: rgba(216, 110, 31, 0.18);
+        }
+
+        .reason-list {
+            margin: 10px 0 0;
+            padding-left: 18px;
+        }
+
+        .reason-list li {
+            margin-bottom: 10px;
+        }
+
+        .analysis-list {
+            display: grid;
+            gap: 16px;
+            margin: 18px 0 0;
+        }
+
+        .fix-box {
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(216, 110, 31, 0.12);
+        }
+
+        .fix-title {
+            margin: 0 0 12px;
+            font-size: 0.98rem;
+            font-weight: 800;
+            color: var(--accent-dark);
+        }
+
+        .fix-list {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .fix-list li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .analysis-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto auto;
+            gap: 12px;
+            align-items: center;
+            padding: 14px 16px;
+            background: #fff;
+            border: 1px solid rgba(34, 22, 15, 0.06);
+            border-left: 4px solid rgba(216, 110, 31, 0.2);
+            border-radius: 14px;
+        }
+
+        .analysis-main {
+            min-width: 0;
+        }
+
+        .analysis-row.high { border-left-color: var(--danger); }
+        .analysis-row.medium { border-left-color: var(--warning); }
+        .analysis-row.low { border-left-color: var(--ok); }
+
+        .analysis-name {
+            font-size: 0.92rem;
+            font-weight: 700;
+            line-height: 1.5;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-help {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid rgba(34, 22, 15, 0.12);
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-weight: 800;
+            cursor: default;
+            background: #fff;
+        }
+
+        .info-help::after {
+            content: attr(data-tip);
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 10px);
+            transform: translateX(-50%);
+            min-width: 240px;
+            max-width: 300px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #2f241b;
+            color: #fff;
+            font-size: 0.9rem;
+            line-height: 1.45;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s ease;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+            text-align: left;
+            z-index: 10;
+        }
+
+        .info-help:hover::after {
+            opacity: 1;
+        }
+
+        .analysis-score {
+            font-size: 0.88rem;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .analysis-level {
+            font-size: 0.84rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .analysis-level.high { color: var(--danger); }
+        .analysis-level.medium { color: var(--warning); }
+        .analysis-level.low { color: var(--ok); }
+
+        .analysis-bar {
+            width: 100%;
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(34, 22, 15, 0.08);
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .analysis-fill {
+            height: 100%;
+            border-radius: 999px;
+        }
+
+        .analysis-fill.high { background: var(--danger); }
+        .analysis-fill.medium { background: var(--warning); }
+        .analysis-fill.low { background: var(--ok); }
+
+        .overall-risk {
+            display: inline-flex;
+            align-items: center;
+            margin: 18px 0 0;
+            padding: 10px 14px;
+            border-radius: 999px;
+            font-size: 1.06rem;
+            font-weight: 800;
+            background: rgba(34, 22, 15, 0.06);
+        }
+
+        .overall-risk.high {
+            color: var(--danger);
+            background: rgba(207, 63, 45, 0.12);
+        }
+        .overall-risk.medium {
+            color: var(--warning);
+            background: rgba(214, 151, 19, 0.14);
+        }
+        .overall-risk.low {
+            color: var(--ok);
+            background: rgba(36, 151, 100, 0.12);
+        }
+
+        .risk-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .risk-main-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(216, 110, 31, 0.1);
+            color: var(--accent-dark);
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .risk-main-initial {
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.56);
+            font-size: 0.78rem;
+            font-weight: 800;
+            line-height: 1;
+            flex: 0 0 auto;
+        }
+
+        .risk-main-tag.high {
+            background: rgba(207, 63, 45, 0.12);
+            color: var(--danger);
+        }
+
+        .risk-main-tag.medium {
+            background: rgba(214, 151, 19, 0.14);
+            color: var(--warning);
+        }
+
+        .risk-main-tag.low {
+            background: rgba(36, 151, 100, 0.12);
+            color: var(--ok);
+        }
+
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 0.86rem;
+            font-weight: 800;
+            margin-bottom: 0;
+        }
+
+        .risk-badge.high {
+            background: rgba(207, 63, 45, 0.1);
+            color: var(--danger);
+        }
+
+        .risk-badge.medium {
+            background: rgba(214, 151, 19, 0.14);
+            color: var(--warning);
+        }
+
+        .risk-badge.low {
+            background: rgba(36, 151, 100, 0.12);
+            color: var(--ok);
+        }
+
+        .facts,
+        .reasons,
+        .results-list,
+        .links {
+            margin: 14px 0 0;
+            padding-left: 18px;
+        }
+
+        .results-list li,
+        .facts li,
+        .reasons li,
+        .links li {
+            margin-bottom: 8px;
+        }
+
+        a { color: var(--accent-dark); }
+
+        .meta {
+            color: var(--muted);
+            font-size: 0.88rem;
+            margin-top: 6px;
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.45s ease both;
+        }
+
+        .button-inner {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        .is-loading .spinner {
+            display: inline-block;
+        }
+
+        .is-loading .button-label::after {
+            content: " ...";
+        }
+
+        .is-loading + .loading-note {
+            display: inline-flex;
+        }
+
+        @media (max-width: 720px) {
+            .page {
+                grid-template-columns: 1fr;
+                padding: 14px;
+            }
+            .sidebar {
+                position: static;
+                min-height: auto;
+            }
+            .side-nav {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .search-row { grid-template-columns: 1fr; }
+            button { padding: 14px 22px; }
+            .hero-top { align-items: flex-start; }
+            .summary-media { grid-template-columns: 1fr; }
+            .summary-thumb { max-width: 180px; }
+            .title-row { gap: 10px; }
+            .title-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+            }
+        }
+
+        @media (min-width: 900px) {
+            .summary-card { grid-column: span 12; }
+            .trademark-card { grid-column: span 12; }
+        }
+
+        .result-block {
+            grid-column: span 12;
+            display: grid;
+            gap: 20px;
+        }
+
+        .result-label {
+            grid-column: span 12;
+            margin: 0;
+            padding: 14px 18px;
+            border-radius: 18px;
+            background: rgba(194, 102, 31, 0.08);
+            color: var(--accent-dark);
+            font-size: 1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        @media (min-width: 900px) {
+            .result-block .summary-card { grid-column: span 12; }
+            .result-block .trademark-card { grid-column: span 12; }
+            .result-block .results-card { grid-column: span 12; }
+        }
+
+        .risk-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.85fr) minmax(300px, 1fr);
+            gap: 22px;
+            align-items: start;
+        }
+
+        .risk-main,
+        .risk-side {
+            min-width: 0;
+        }
+
+        .risk-side {
+            display: grid;
+            gap: 14px;
+        }
+
+        .risk-side-card {
+            padding: 16px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(34, 22, 15, 0.08);
+        }
+
+        .verdict-action {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .verdict-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 900;
+            background: rgba(36, 151, 100, 0.12);
+            color: var(--ok);
+        }
+
+        .verdict-icon.high {
+            background: rgba(207, 63, 45, 0.12);
+            color: var(--danger);
+        }
+
+        .verdict-icon.medium {
+            background: rgba(214, 151, 19, 0.15);
+            color: var(--warning);
+        }
+
+        .verdict-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 900;
+            line-height: 1.15;
+        }
+
+        .verdict-title.high { color: var(--danger); }
+        .verdict-title.medium { color: var(--warning); }
+        .verdict-title.low { color: var(--ok); }
+
+        .metric-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 26px;
+            padding: 0 10px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            background: rgba(34, 22, 15, 0.06);
+            color: var(--muted);
+        }
+
+        .metric-badge.high { color: var(--danger); background: rgba(207, 63, 45, 0.12); }
+        .metric-badge.medium { color: var(--warning); background: rgba(214, 151, 19, 0.15); }
+        .metric-badge.low { color: var(--ok); background: rgba(36, 151, 100, 0.12); }
+
+        .trademark-card .overall-risk {
+            margin: 0 0 14px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 1.15rem;
+        }
+
+        .trademark-card .risk-box,
+        .trademark-card .smart-block,
+        .trademark-card .fix-box {
+            border-radius: 12px;
+        }
+
+        .trademark-card .risk-box {
+            margin: 0 0 16px;
+            padding: 16px;
+        }
+
+        .trademark-card .mini-grid {
+            gap: 0;
+            border-top: 1px solid rgba(34, 22, 15, 0.08);
+        }
+
+        .trademark-card .mini-row {
+            padding: 11px 0;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(34, 22, 15, 0.08);
+            border-radius: 0;
+        }
+
+        .trademark-card .mini-row span {
+            text-align: right;
+        }
+
+        .trademark-card .analysis-list {
+            gap: 10px;
+            margin: 0;
+        }
+
+        .trademark-card .analysis-row {
+            grid-template-columns: 1fr auto;
+            gap: 8px 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+        }
+
+        .trademark-card .analysis-score {
+            font-size: 1.1rem;
+            font-weight: 900;
+        }
+
+        .trademark-card .analysis-level {
+            grid-column: 1 / -1;
+            justify-self: start;
+        }
+
+        .trademark-card .analysis-bar {
+            height: 4px;
+        }
+
+        .trademark-card .source-link {
+            border-radius: 10px;
+        }
+
+        .action-recommendation {
+            margin: 8px 0 0;
+            color: var(--accent-dark);
+            font-size: 0.9rem;
+            font-weight: 800;
+            line-height: 1.45;
+        }
+
+        .trademark-card .info-help {
+            width: 20px;
+            height: 20px;
+            color: #9a8f86;
+            border-color: rgba(34, 22, 15, 0.1);
+            font-size: 0.78rem;
+            background: rgba(255, 255, 255, 0.88);
+        }
+
+        @media (max-width: 1100px) {
+            .risk-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hero {
+            padding: 34px;
+        }
+
+        .hero .panel {
+            padding: 22px;
+            border-radius: 20px;
+            box-shadow: 0 18px 48px rgba(31, 28, 24, 0.06);
+        }
+
+        .hero form {
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .hero .search-row {
+            gap: 12px;
+        }
+
+        .hero input[type="text"] {
+            min-height: 52px;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 0.94rem;
+            background: #fff;
+        }
+
+        .hero button[type="submit"] {
+            min-height: 52px;
+            border-radius: 12px;
+            padding: 0 28px;
+        }
+
+        .trademark-card {
+            color: #1a1a1a;
+        }
+
+        .trademark-card .smart-block,
+        .trademark-card .fix-box,
+        .risk-side-card {
+            padding: 24px;
+            background: #fff;
+            border: 1px solid rgba(26, 26, 26, 0.07);
+            box-shadow: 0 14px 36px rgba(26, 26, 26, 0.045);
+        }
+
+        .trademark-card .smart-title,
+        .risk-side-card .smart-title {
+            font-size: 0.98rem;
+            letter-spacing: 0;
+            color: var(--accent-dark);
+            font-weight: 800;
+            margin-bottom: 12px;
+            text-transform: none;
+        }
+
+        .trademark-card .smart-text {
+            color: #1a1a1a;
+            font-size: 0.94rem;
+            line-height: 1.72;
+        }
+
+        .trademark-card .reason-list li,
+        .trademark-card .fix-list li {
+            color: #1a1a1a;
+            line-height: 1.7;
+        }
+
+        .trademark-card .mini-row {
+            display: grid;
+            grid-template-columns: minmax(160px, 0.8fr) minmax(0, 1.2fr);
+            align-items: start;
+            gap: 18px;
+            padding: 13px 0;
+        }
+
+        .trademark-card .mini-row strong {
+            color: #666;
+            font-weight: 700;
+        }
+
+        .trademark-card .mini-row span {
+            color: #1a1a1a;
+            font-weight: 700;
+            text-align: right;
+            line-height: 1.45;
+        }
+
+        .trademark-card .mini-row {
+            font-size: 0.95rem;
+        }
+
+        .trademark-card .mini-row strong,
+        .trademark-card .mini-row span {
+            font-size: 0.95rem;
+        }
+
+        .verdict-title {
+            font-size: clamp(1.5rem, 2.2vw, 1.75rem);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+        }
+
+        .trademark-card .analysis-name {
+            color: #1a1a1a;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        .trademark-card .analysis-score {
+            color: #1a1a1a;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .trademark-card .analysis-row {
+            padding: 14px 16px;
+            background: #fff;
+            border-color: rgba(26, 26, 26, 0.07);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img class="sidebar-logo" src="{% static 'logo.png' %}" alt="VH Media logo">
+                <div>
+                    <p class="sidebar-title">VH Media</p>
+                    <p class="sidebar-subtitle">Trademark checker cho POD.</p>
+                </div>
+            </div>
+            <nav class="side-nav" aria-label="Result sections">
+                <a href="#search-form">
+                    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+                    <span>Check</span>
+                </a>
+                <a href="#section-info" class="tab-link is-active" data-tab-target="info">
+                    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16"></path><path d="M4 12h16"></path><path d="M4 19h10"></path></svg>
+                    <span>Thông tin</span>
+                </a>
+                <a href="#section-risk" class="tab-link" data-tab-target="risk">
+                    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z"></path><path d="M12 9v5"></path><path d="M12 17h.01"></path></svg>
+                    <span>Trademark</span>
+                </a>
+                <a href="#section-google" class="tab-link" data-tab-target="google">
+                    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18"></path><path d="M12 3c2.3 2.4 3.5 5.4 3.5 9S14.3 18.6 12 21"></path><path d="M12 3C9.7 5.4 8.5 8.4 8.5 12s1.2 6.6 3.5 9"></path></svg>
+                    <span>Kết quả Google</span>
+                </a>
+            </nav>
+        </aside>
+        <div class="content">
+        <section class="hero">
+            <div class="hero-top">
+                <img class="brand-logo" src="{% static 'logo.png' %}" alt="VH Media logo">
+                <div class="brand-text">
+                    <p class="brand-name">VH Media</p>
+                </div>
+            </div>
+            <h1>Trademark Checker</h1>
+            <p class="lead">Hãy nhập từ cần check vào đây.</p>
+            <form method="post" class="panel" id="search-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" id="form-action" value="">
+                <input type="hidden" name="history_value" id="history-value" value="">
+                <div class="search-row">
+                    <input
+                        type="text"
+                        name="keyword"
+                        value="{{ keyword }}"
+                        placeholder="Nhập từ khóa, tên thương hiệu, người nổi tiếng..."
+                    >
+                    <button type="submit" id="submit-button">
+                        <span class="button-inner">
+                            <span class="spinner"></span>
+                            <span class="button-label">Kiểm tra</span>
+                        </span>
+                    </button>
+                </div>
+                <div class="hint">
+                    Truy xuất thông tin từ Google và đánh giá trademark theo dữ liệu công khai.
+                </div>
+                {% if suggested_keywords %}
+                    <div>
+                        <p class="meta">Từ khóa gợi ý</p>
+                        <div class="quick-row">
+                            {% for item in suggested_keywords %}
+                                <button class="chip" type="button" data-keyword="{{ item }}">{{ item }}</button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                {% if history %}
+                    <div>
+                        <p class="meta">History search</p>
+                        <div class="history-row">
+                            {% for item in history %}
+                                <div class="history-item">
+                                    <button class="history-search" type="button" data-history-action="search_history" data-history-value="{{ item }}">{{ item }}</button>
+                                    <button class="history-delete" type="button" data-history-action="delete_history" data-history-value="{{ item }}">✕</button>
+                                </div>
+                            {% endfor %}
+                            <button class="history-clear" type="button" data-history-action="clear_history">Clear all</button>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if error %}
+                    <div class="error">{{ error }}</div>
+                {% endif %}
+                <div class="loading-note" id="loading-note">
+                    <span class="spinner"></span>
+                    <span>Đang phân tích trademark...</span>
+                </div>
+            </form>
+        </section>
+
+        {% if report %}
+            <section class="grid fade-in">
+                {% if report.all_reports|length > 1 %}
+                    {% for item in report.all_reports %}
+                        <section class="result-block">
+                            <p class="result-label">Kết quả số {{ forloop.counter }}</p>
+                            <article class="summary-card tab-section" data-tab-section="info" id="{% if forloop.first %}section-info{% endif %}">
+                                <p class="eyebrow">Thông tin</p>
+                                <div class="title-row">
+                                    <span class="title-icon">
+                                        {% if item.summary.entity_type == "Con người" %}👤{% elif item.summary.entity_type == "Công ty hoặc brand" %}🏷️{% elif item.summary.entity_type == "Sản phẩm hoặc dịch vụ số" %}💠{% else %}🔎{% endif %}
+                                    </span>
+                                    <h2 class="section-title">{{ item.term }}</h2>
+                                </div>
+                                {% if forloop.first and report.resolved_from_input %}
+                                    <p class="meta">Đã nhận diện từ khóa chính từ câu nhập: {{ report.original_term }}</p>
+                                {% endif %}
+                                <div class="info-tags">
+                                    {% if item.summary.entity_type and item.summary.entity_type != "Chưa rõ" %}
+                                        <span class="info-tag">{{ item.summary.entity_type }}</span>
+                                    {% endif %}
+                                    {% if item.trademark.top_label %}
+                                        <span class="info-tag">{{ item.trademark.top_label }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="summary-media {% if not item.display_image %}no-image{% endif %}">
+                                    {% if item.display_image %}
+                                        <img class="summary-thumb" src="{{ item.display_image }}" alt="{{ item.term }}">
+                                    {% endif %}
+                                    <p class="overview-text">{{ item.summary.overview }}</p>
+                                </div>
+
+                                {% if item.summary.facts %}
+                                    <ul class="facts">
+                                        {% for fact in item.summary.facts %}
+                                            <li>{{ fact }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+
+                                {% if item.wiki_summary.url %}
+                                    <p class="meta">
+                                        Nguồn thêm:
+                                        <a href="{{ item.wiki_summary.url }}" target="_blank" rel="noreferrer">Wikipedia</a>
+                                    </p>
+                                {% endif %}
+                            </article>
+
+                            <article class="trademark-card tab-section is-hidden" data-tab-section="risk" id="{% if forloop.first %}section-risk{% endif %}">
+                                <p class="eyebrow">Trademark</p>
+                                <div class="risk-layout">
+                                    <div class="risk-main">
+                                        <div class="smart-block">
+                                            <p class="smart-title">Giải thích</p>
+                                            <p class="smart-text">{{ item.trademark.explanation }}</p>
+                                            <div class="mini-grid">
+                                                <div class="mini-row"><strong>Yếu tố trùng khớp</strong><span>{{ item.trademark.matched_elements|join:", "|default:"Chưa có tín hiệu rõ" }}</span></div>
+                                                <div class="mini-row"><strong>Mức tin cậy</strong><span class="metric-badge {{ item.trademark.level_class }}">{{ item.trademark.confidence_level }}</span></div>
+                                            </div>
+                                        </div>
+                                        <div class="smart-block">
+                                            <p class="smart-title">Phân tích chi tiết</p>
+                                            <div class="mini-grid">
+                                                {% for row in item.trademark.advanced_breakdown %}
+                                                    <div class="mini-row"><strong>{{ row.label }}</strong><span>{{ row.value }}</span></div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <div class="smart-block">
+                                            <p class="smart-title">Kiểm tra an toàn thiết kế</p>
+                                            <ul class="reason-list">
+                                                {% for note in item.trademark.design_safe %}
+                                                    <li>{{ note }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% if item.suggested_fix.bypass %}
+                                            <div class="fix-box">
+                                                <p class="fix-title">Đề xuất</p>
+                                                <ul class="fix-list">
+                                                    {% for suggestion in item.suggested_fix.bypass %}
+                                                        <li>{{ suggestion }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <aside class="risk-side">
+                                        <div class="risk-side-card">
+                                            <div class="verdict-action">
+                                                <span class="verdict-icon {{ item.trademark.level_class }}">{% if item.trademark.level == "Cao" %}!{% elif item.trademark.level == "Trung bình" %}?{% else %}✓{% endif %}</span>
+                                                <div>
+                                                    <p class="verdict-title {{ item.trademark.level_class }}">{% if item.trademark.level == "Cao" %}CẤM BÁN{% elif item.trademark.level == "Trung bình" %}CẦN KIỂM TRA{% else %}CÓ THỂ BÁN{% endif %}</p>
+                                                    <p class="meta">Rủi ro tổng: {{ item.trademark.level|upper }}</p>
+                                                    <p class="action-recommendation">{{ item.trademark.action_recommendation }}</p>
+                                                </div>
+                                            </div>
+                                            <ul class="reason-list">
+                                                {% for reason in item.trademark.reasons|slice:":2" %}
+                                                    <li>{{ reason }}</li>
+                                                {% empty %}
+                                                    <li>{{ item.trademark.consequence }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        <div class="risk-side-card">
+                                            <p class="smart-title">Chỉ số nhanh</p>
+                                            <div class="analysis-list">
+                                                {% for analysis in item.trademark.analyses %}
+                                                    <div class="analysis-row {{ analysis.level }}">
+                                                        <div class="analysis-main">
+                                                            <div class="analysis-name">
+                                                                <span>{% if analysis.title == 'Trademark risk' %}Trademark{% elif analysis.title == 'Copyright risk' %}Copyright{% elif analysis.title == 'Public figure risk' %}Public Figure{% else %}Intellectual Property Rights{% endif %}</span>
+                                                                <span class="info-help" data-tip="{% if analysis.title == 'Trademark risk' %}Kiểm tra mức trùng với thương hiệu, slogan hoặc tên thương mại.{% elif analysis.title == 'Copyright risk' %}Kiểm tra rủi ro bản quyền trực tiếp hoặc gián tiếp như logo, hình ảnh, franchise.{% elif analysis.title == 'Public figure risk' %}Kiểm tra rủi ro liên quan người nổi tiếng, chính trị hoặc nhân vật công chúng.{% else %}Tổng hợp rủi ro quyền sở hữu trí tuệ từ trademark, copyright và public figure.{% endif %}">ⓘ</span>
+                                                            </div>
+                                                            <div class="analysis-bar">
+                                                                <div class="analysis-fill {{ analysis.level }}" style="width: {{ analysis.score }}%;"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="analysis-score">{{ analysis.score }}%</div>
+                                                        <div class="analysis-level {{ analysis.level }}"><span class="metric-badge {{ analysis.level }}">{% if analysis.level == "high" %}Cao{% elif analysis.level == "medium" %}Trung bình{% else %}Thấp{% endif %}</span></div>
+                                                        {% if analysis.consequence %}
+                                                            <p class="smart-text" style="grid-column: 1 / -1;">{{ analysis.consequence }}</p>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <div class="risk-side-card">
+                                            <p class="smart-title">Tra cứu nhanh</p>
+                                            <div class="source-actions">
+                                                {% for source in item.trademark.official_sources %}
+                                                    <a class="source-link" href="{{ source.url }}" target="_blank" rel="noreferrer">{{ source.label }}</a>
+                                                {% endfor %}
+                                            </div>
+                                            <p class="smart-text">Mở nguồn chính thức để đối chiếu trademark. Bản quyền hình ảnh/logo cần kiểm tra riêng.</p>
+                                        </div>
+                                    </aside>
+                                </div>
+                            </article>
+
+                            <article class="results-card tab-section is-hidden" data-tab-section="google" id="{% if forloop.first %}section-google{% endif %}">
+                                <p class="eyebrow">Ket qua Google</p>
+                                <div class="title-row">
+                                    <span class="title-icon">🌐</span>
+                                    <h2 class="section-title">Thông tin từ kết quả tìm kiếm</h2>
+                                </div>
+                                <ul class="results-list">
+                                    {% for result in item.results|slice:":3" %}
+                                        <li>
+                                            <a class="result-title-link" href="{{ result.link }}" target="_blank" rel="noreferrer">
+                                                {% if result.favicon_url %}<img class="result-favicon" src="{{ result.favicon_url }}" alt="">{% endif %}
+                                                <span>{{ result.title }}</span>
+                                            </a>
+                                            <div class="meta">{{ result.source }}</div>
+                                            {% if result.snippet %}
+                                                <div>{{ result.snippet|truncatechars:160 }}</div>
+                                            {% endif %}
+                                        </li>
+                                    {% empty %}
+                                        <li>Không lấy được kết quả tìm kiếm.</li>
+                                    {% endfor %}
+                                </ul>
+                            </article>
+                        </section>
+                    {% endfor %}
+                {% else %}
+                <article class="summary-card tab-section" data-tab-section="info" id="section-info">
+                    <p class="eyebrow">Thông tin</p>
+                    <div class="title-row">
+                        <span class="title-icon">
+                            {% if report.summary.entity_type == "Con người" %}👤{% elif report.summary.entity_type == "Công ty hoặc brand" %}🏷️{% elif report.summary.entity_type == "Sản phẩm hoặc dịch vụ số" %}💠{% else %}🔎{% endif %}
+                        </span>
+                        <h2 class="section-title">{{ report.term }}</h2>
+                    </div>
+                    {% if report.resolved_from_input %}
+                        <p class="meta">Đã nhận diện từ khóa chính từ câu nhập: {{ report.original_term }}</p>
+                    {% endif %}
+                    <div class="info-tags">
+                        {% if report.summary.entity_type and report.summary.entity_type != "Chưa rõ" %}
+                            <span class="info-tag">{{ report.summary.entity_type }}</span>
+                        {% endif %}
+                        {% if report.trademark.top_label %}
+                            <span class="info-tag">{{ report.trademark.top_label }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="summary-media {% if not report.display_image %}no-image{% endif %}">
+                        {% if report.display_image %}
+                            <img class="summary-thumb" src="{{ report.display_image }}" alt="{{ report.term }}">
+                        {% endif %}
+                        <p class="overview-text">{{ report.summary.overview }}</p>
+                    </div>
+
+                    {% if report.summary.facts %}
+                        <ul class="facts">
+                            {% for fact in report.summary.facts %}
+                                <li>{{ fact }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    {% if report.wiki_summary.url %}
+                        <p class="meta">
+                            Nguồn thêm:
+                            <a href="{{ report.wiki_summary.url }}" target="_blank" rel="noreferrer">Wikipedia</a>
+                        </p>
+                    {% endif %}
+                </article>
+
+                <article class="trademark-card tab-section is-hidden" data-tab-section="risk" id="section-risk">
+                    <p class="eyebrow">Trademark</p>
+                    <div class="risk-layout">
+                        <div class="risk-main">
+                            <div class="smart-block">
+                                <p class="smart-title">Giải thích</p>
+                                <p class="smart-text">{{ report.trademark.explanation }}</p>
+                                <div class="mini-grid">
+                                    <div class="mini-row"><strong>Yếu tố trùng khớp</strong><span>{{ report.trademark.matched_elements|join:", "|default:"Chưa có tín hiệu rõ" }}</span></div>
+                                    <div class="mini-row"><strong>Mức tin cậy</strong><span class="metric-badge {{ report.trademark.level_class }}">{{ report.trademark.confidence_level }}</span></div>
+                                </div>
+                            </div>
+                            <div class="smart-block">
+                                <p class="smart-title">Phân tích chi tiết</p>
+                                <div class="mini-grid">
+                                    {% for row in report.trademark.advanced_breakdown %}
+                                        <div class="mini-row"><strong>{{ row.label }}</strong><span>{{ row.value }}</span></div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="smart-block">
+                                <p class="smart-title">Kiểm tra an toàn thiết kế</p>
+                                <ul class="reason-list">
+                                    {% for note in report.trademark.design_safe %}
+                                        <li>{{ note }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% if report.suggested_fix.bypass %}
+                                <div class="fix-box">
+                                    <p class="fix-title">Đề xuất</p>
+                                    <ul class="fix-list">
+                                        {% for suggestion in report.suggested_fix.bypass %}
+                                            <li>{{ suggestion }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <aside class="risk-side">
+                            <div class="risk-side-card">
+                                <div class="verdict-action">
+                                    <span class="verdict-icon {{ report.trademark.level_class }}">{% if report.trademark.level == "Cao" %}!{% elif report.trademark.level == "Trung bình" %}?{% else %}✓{% endif %}</span>
+                                    <div>
+                                        <p class="verdict-title {{ report.trademark.level_class }}">{% if report.trademark.level == "Cao" %}CẤM BÁN{% elif report.trademark.level == "Trung bình" %}CẦN KIỂM TRA{% else %}CÓ THỂ BÁN{% endif %}</p>
+                                        <p class="meta">Rủi ro tổng: {{ report.trademark.level|upper }}</p>
+                                        <p class="action-recommendation">{{ report.trademark.action_recommendation }}</p>
+                                    </div>
+                                </div>
+                                <ul class="reason-list">
+                                    {% for reason in report.trademark.reasons|slice:":2" %}
+                                        <li>{{ reason }}</li>
+                                    {% empty %}
+                                        <li>{{ report.trademark.consequence }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="risk-side-card">
+                                <p class="smart-title">Chỉ số nhanh</p>
+                                <div class="analysis-list">
+                                    {% for analysis in report.trademark.analyses %}
+                                        <div class="analysis-row {{ analysis.level }}">
+                                            <div class="analysis-main">
+                                                <div class="analysis-name">
+                                                    <span>{% if analysis.title == 'Trademark risk' %}Trademark{% elif analysis.title == 'Copyright risk' %}Copyright{% elif analysis.title == 'Public figure risk' %}Public Figure{% else %}Intellectual Property Rights{% endif %}</span>
+                                                    <span class="info-help" data-tip="{% if analysis.title == 'Trademark risk' %}Kiểm tra mức trùng với thương hiệu, slogan hoặc tên thương mại.{% elif analysis.title == 'Copyright risk' %}Kiểm tra rủi ro bản quyền trực tiếp hoặc gián tiếp như logo, hình ảnh, franchise.{% elif analysis.title == 'Public figure risk' %}Kiểm tra rủi ro liên quan người nổi tiếng, chính trị hoặc nhân vật công chúng.{% else %}Tổng hợp rủi ro quyền sở hữu trí tuệ từ trademark, copyright và public figure.{% endif %}">ⓘ</span>
+                                                </div>
+                                                <div class="analysis-bar">
+                                                    <div class="analysis-fill {{ analysis.level }}" style="width: {{ analysis.score }}%;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="analysis-score">{{ analysis.score }}%</div>
+                                            <div class="analysis-level {{ analysis.level }}"><span class="metric-badge {{ analysis.level }}">{% if analysis.level == "high" %}Cao{% elif analysis.level == "medium" %}Trung bình{% else %}Thấp{% endif %}</span></div>
+                                            {% if analysis.consequence %}
+                                                <p class="smart-text" style="grid-column: 1 / -1;">{{ analysis.consequence }}</p>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="risk-side-card">
+                                <p class="smart-title">Tra cứu nhanh</p>
+                                <div class="source-actions">
+                                    {% for source in report.trademark.official_sources %}
+                                        <a class="source-link" href="{{ source.url }}" target="_blank" rel="noreferrer">{{ source.label }}</a>
+                                    {% endfor %}
+                                </div>
+                                <p class="smart-text">Mở nguồn chính thức để đối chiếu trademark. Bản quyền hình ảnh/logo cần kiểm tra riêng.</p>
+                            </div>
+                        </aside>
+                    </div>
+                </article>
+
+                <article class="results-card tab-section is-hidden" data-tab-section="google" id="section-google">
+                    <p class="eyebrow">Ket qua Google</p>
+                    <div class="title-row">
+                        <span class="title-icon"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18"></path><path d="M12 3c2.3 2.4 3.5 5.4 3.5 9S14.3 18.6 12 21"></path><path d="M12 3C9.7 5.4 8.5 8.4 8.5 12s1.2 6.6 3.5 9"></path></svg></span>
+                        <h2 class="section-title">Thông tin từ kết quả tìm kiếm</h2>
+                    </div>
+                    <ul class="results-list">
+                        {% for item in report.results|slice:":3" %}
+                            <li>
+                                <a class="result-title-link" href="{{ item.link }}" target="_blank" rel="noreferrer">
+                                    {% if item.favicon_url %}<img class="result-favicon" src="{{ item.favicon_url }}" alt="">{% endif %}
+                                    <span>{{ item.title }}</span>
+                                </a>
+                                <div class="meta">{{ item.source }}</div>
+                                {% if item.snippet %}
+                                    <div>{{ item.snippet|truncatechars:160 }}</div>
+                                {% endif %}
+                            </li>
+                        {% empty %}
+                            <li>Không lấy được kết quả tìm kiếm.</li>
+                        {% endfor %}
+                    </ul>
+                </article>
+                {% endif %}
+            </section>
+        {% endif %}
+        </div>
+    </main>
+    <script>
+        const form = document.getElementById("search-form");
+        const submitButton = document.getElementById("submit-button");
+        const loadingNote = document.getElementById("loading-note");
+        const keywordInput = form ? form.querySelector('input[name="keyword"]') : null;
+        const actionInput = document.getElementById("form-action");
+        const historyValueInput = document.getElementById("history-value");
+        const chips = document.querySelectorAll("[data-keyword]");
+        const historyButtons = document.querySelectorAll("[data-history-action]");
+        const tabLinks = document.querySelectorAll("[data-tab-target]");
+        const tabSections = document.querySelectorAll("[data-tab-section]");
+
+        function resetSubmitState() {
+            if (submitButton) {
+                submitButton.classList.remove("is-loading");
+                submitButton.disabled = false;
+            }
+            if (loadingNote) {
+                loadingNote.style.display = "none";
+            }
+            if (actionInput) {
+                actionInput.value = "";
+            }
+            if (historyValueInput) {
+                historyValueInput.value = "";
+            }
+        }
+
+        resetSubmitState();
+        window.addEventListener("pageshow", resetSubmitState);
+
+        chips.forEach((chip) => {
+            chip.addEventListener("click", () => {
+                if (keywordInput) {
+                    keywordInput.value = chip.dataset.keyword || "";
+                    keywordInput.focus();
+                }
+            });
+        });
+
+        historyButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                if (!form || !actionInput || !historyValueInput) {
+                    return;
+                }
+                actionInput.value = button.dataset.historyAction || "";
+                historyValueInput.value = button.dataset.historyValue || "";
+                if (button.dataset.historyAction === "search_history" && keywordInput) {
+                    keywordInput.value = button.dataset.historyValue || "";
+                }
+                submitButton.classList.add("is-loading");
+                submitButton.disabled = true;
+                if (loadingNote) {
+                    loadingNote.style.display = "inline-flex";
+                }
+                form.submit();
+            });
+        });
+
+        if (form && submitButton) {
+            form.addEventListener("submit", (event) => {
+                const currentAction = actionInput ? actionInput.value : "";
+                if (!currentAction && (!keywordInput || !keywordInput.value.trim())) {
+                    event.preventDefault();
+                    resetSubmitState();
+                    return;
+                }
+                submitButton.classList.add("is-loading");
+                submitButton.disabled = true;
+                if (loadingNote) {
+                    loadingNote.style.display = "inline-flex";
+                }
+            });
+        }
+
+        tabLinks.forEach((link) => {
+            link.addEventListener("click", (event) => {
+                const target = link.dataset.tabTarget;
+                if (!target) {
+                    return;
+                }
+                event.preventDefault();
+                tabLinks.forEach((item) => item.classList.remove("is-active"));
+                link.classList.add("is-active");
+                tabSections.forEach((section) => {
+                    section.classList.toggle("is-hidden", section.dataset.tabSection !== target);
+                });
+                const visibleSection = document.querySelector(`[data-tab-section="${target}"]`);
+                if (visibleSection) {
+                    visibleSection.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
