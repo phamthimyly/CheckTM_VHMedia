@@ -1,6 +1,6 @@
 from django.test import SimpleTestCase
 
-from .services import assess_trademark_risk, build_summary, extract_birth_year, resolve_focus_terms
+from .services import danh_gia_rui_ro_trademark, extract_birth_year, tach_tu_khoa_chinh, tao_tom_tat
 
 
 class ServiceTests(SimpleTestCase):
@@ -9,11 +9,11 @@ class ServiceTests(SimpleTestCase):
         self.assertEqual(extract_birth_year(doan_van), "1989")
 
     def test_ten_nguoi_noi_tieng_co_rui_ro_su_dung_cao(self):
-        tom_tat = build_summary(
+        tom_tat = tao_tom_tat(
             [],
             {"extract": "Taylor Swift is an American singer-songwriter born 1989."},
         )
-        bao_cao = assess_trademark_risk(
+        bao_cao = danh_gia_rui_ro_trademark(
             "Taylor Swift",
             [],
             {"extract": "Taylor Swift is an American singer-songwriter born 1989."},
@@ -22,11 +22,11 @@ class ServiceTests(SimpleTestCase):
         self.assertGreaterEqual(bao_cao["score"], 65)
 
     def test_tu_khoa_thuong_hieu_lam_tang_rui_ro_trademark(self):
-        tom_tat = build_summary(
+        tom_tat = tao_tom_tat(
             [],
             {"extract": "Spotify is a music streaming service and technology company."},
         )
-        bao_cao = assess_trademark_risk(
+        bao_cao = danh_gia_rui_ro_trademark(
             "Spotify",
             [],
             {"extract": "Spotify is a music streaming service and technology company."},
@@ -35,20 +35,20 @@ class ServiceTests(SimpleTestCase):
         self.assertGreaterEqual(bao_cao["score"], 35)
 
     def test_tach_tu_khoa_chinh_tim_duoc_coca_cola_trong_title_dai(self):
-        self.assertEqual(resolve_focus_terms("Coca Cola Vintage Shirt"), ["Coca-Cola"])
+        self.assertEqual(tach_tu_khoa_chinh("Coca Cola Vintage Shirt"), ["Coca-Cola"])
 
     def test_tach_tu_khoa_chinh_tim_duoc_harry_potter_trong_title_dai(self):
-        self.assertEqual(resolve_focus_terms("Harry Potter Hogwarts Shirt"), ["Harry Potter", "Hogwarts"])
+        self.assertEqual(tach_tu_khoa_chinh("Harry Potter Hogwarts Shirt"), ["Harry Potter", "Hogwarts"])
 
     def test_tach_duoc_cum_chinh_voi_ten_la(self):
-        self.assertEqual(resolve_focus_terms("Nirvexa premium retro shirt"), ["Nirvexa"])
+        self.assertEqual(tach_tu_khoa_chinh("Nirvexa premium retro shirt"), ["Nirvexa"])
 
     def test_hogwarts_khong_bi_xep_nham_la_chinh_tri(self):
-        tom_tat = build_summary(
+        tom_tat = tao_tom_tat(
             [],
             {"extract": "Hogwarts is a fictional boarding school of magic in the Harry Potter franchise."},
         )
-        bao_cao = assess_trademark_risk(
+        bao_cao = danh_gia_rui_ro_trademark(
             "Hogwarts",
             [],
             {"extract": "Hogwarts is a fictional boarding school of magic in the Harry Potter franchise."},
@@ -59,11 +59,11 @@ class ServiceTests(SimpleTestCase):
         self.assertEqual(rui_ro_nguoi_noi_tieng["score"], 0)
 
     def test_rabbit_khong_bi_xep_nham_la_am_nhac(self):
-        tom_tat = build_summary(
+        tom_tat = tao_tom_tat(
             [],
             {"extract": "Rabbit is a small mammal often kept as a pet and found in many species around the world."},
         )
-        bao_cao = assess_trademark_risk(
+        bao_cao = danh_gia_rui_ro_trademark(
             "Rabbit",
             [],
             {"extract": "Rabbit is a small mammal often kept as a pet and found in many species around the world."},

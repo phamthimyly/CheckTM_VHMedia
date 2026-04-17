@@ -1,6 +1,8 @@
 from django.shortcuts import render
 
-from .services import fetch_term_report
+from .services import lay_bao_cao_tu_khoa
+
+THONG_BAO_LOI_DU_LIEU = "Không lấy được dữ liệu từ nguồn bên ngoài. Vui lòng thử lại."
 
 GOI_Y_TU_KHOA = [
     "Disney",
@@ -31,29 +33,21 @@ def home(request):
         elif hanh_dong == "search_history" and gia_tri_lich_su:
             tu_khoa = gia_tri_lich_su
             try:
-                bao_cao = fetch_term_report(tu_khoa)
-            except Exception as exc:
-                loi = (
-                    "Không lấy được dữ liệu từ nguồn bên ngoài. "
-                    "Kiểm tra Internet hoặc cấu hình Google API. "
-                    f"Chi tiết kỹ thuật: {exc}"
-                )
+                bao_cao = lay_bao_cao_tu_khoa(tu_khoa)
+            except Exception:
+                loi = THONG_BAO_LOI_DU_LIEU
         else:
             tu_khoa = (request.POST.get("keyword") or "").strip()
             if not tu_khoa:
-                error = "Hãy nhập từ cần check."
+                loi = "Hãy nhập từ cần check."
             else:
                 try:
-                    bao_cao = fetch_term_report(tu_khoa)
+                    bao_cao = lay_bao_cao_tu_khoa(tu_khoa)
                     lich_su_moi = [tu_khoa] + [muc for muc in lich_su if muc.lower() != tu_khoa.lower()]
                     request.session["search_history"] = lich_su_moi[:6]
                     lich_su = request.session["search_history"]
-                except Exception as exc:
-                    loi = (
-                        "Không lấy được dữ liệu từ nguồn bên ngoài. "
-                        "Kiểm tra Internet hoặc cấu hình Google API. "
-                        f"Chi tiết kỹ thuật: {exc}"
-                    )
+                except Exception:
+                    loi = THONG_BAO_LOI_DU_LIEU
 
     return render(
         request,

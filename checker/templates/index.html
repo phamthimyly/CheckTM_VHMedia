@@ -510,6 +510,17 @@
             background: #fff8f2;
         }
 
+        .summary-thumb-link {
+            display: block;
+            border-radius: 18px;
+            transition: transform 0.18s ease, opacity 0.18s ease;
+        }
+
+        .summary-thumb-link:hover {
+            transform: translateY(-1px);
+            opacity: 0.92;
+        }
+
         .results-card li,
         .summary-card li,
         .trademark-card li {
@@ -1466,7 +1477,9 @@
                                 </div>
                                 <div class="summary-media {% if not item.display_image %}no-image{% endif %}">
                                     {% if item.display_image %}
-                                        <img class="summary-thumb" src="{{ item.display_image }}" alt="{{ item.term }}">
+                                        <a class="summary-thumb-link" href="{% if item.wiki_summary.url %}{{ item.wiki_summary.url }}{% elif item.results.0.link %}{{ item.results.0.link }}{% else %}{{ item.display_image }}{% endif %}" target="_blank" rel="noreferrer" aria-label="Mở nguồn ảnh {{ item.term }}">
+                                            <img class="summary-thumb" src="{{ item.display_image }}" alt="{{ item.term }}">
+                                        </a>
                                     {% endif %}
                                     <p class="overview-text">{{ item.summary.overview }}</p>
                                 </div>
@@ -1627,7 +1640,9 @@
                     </div>
                     <div class="summary-media {% if not report.display_image %}no-image{% endif %}">
                         {% if report.display_image %}
-                            <img class="summary-thumb" src="{{ report.display_image }}" alt="{{ report.term }}">
+                            <a class="summary-thumb-link" href="{% if report.wiki_summary.url %}{{ report.wiki_summary.url }}{% elif report.results.0.link %}{{ report.results.0.link }}{% else %}{{ report.display_image }}{% endif %}" target="_blank" rel="noreferrer" aria-label="Mở nguồn ảnh {{ report.term }}">
+                                <img class="summary-thumb" src="{{ report.display_image }}" alt="{{ report.term }}">
+                            </a>
                         {% endif %}
                         <p class="overview-text">{{ report.summary.overview }}</p>
                     </div>

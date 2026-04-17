@@ -334,39 +334,39 @@ class SearchResult:
         return f"https://www.google.com/s2/favicons?domain={quote_plus(host)}&sz=64"
 
 
-def fetch_term_report(term: str) -> dict[str, Any]:
-    original_term = normalize_space(term)
-    candidates = resolve_focus_terms(original_term)
-    reports = build_candidate_reports(candidates, original_term)
-    primary_report = choose_primary_report(reports, original_term)
-    resolved_term = primary_report["term"]
-    web_results = primary_report["results"]
-    wiki_summary = primary_report["wiki_summary"]
-    summary = primary_report["summary"]
-    trademark = primary_report["trademark"]
-    suggested_fix = build_suggested_fix(
-        original_term=original_term,
-        resolved_term=resolved_term,
-        trademark=trademark,
-        summary=summary,
+def lay_bao_cao_tu_khoa(term: str) -> dict[str, Any]:
+    tu_khoa_goc = normalize_space(term)
+    tu_khoa_ung_vien = tach_tu_khoa_chinh(tu_khoa_goc)
+    cac_bao_cao = tao_bao_cao_ung_vien(tu_khoa_ung_vien, tu_khoa_goc)
+    bao_cao_chinh = chon_bao_cao_chinh(cac_bao_cao, tu_khoa_goc)
+    tu_khoa_da_chon = bao_cao_chinh["term"]
+    ket_qua_web = bao_cao_chinh["results"]
+    tom_tat_wiki = bao_cao_chinh["wiki_summary"]
+    tom_tat = bao_cao_chinh["summary"]
+    danh_gia = bao_cao_chinh["trademark"]
+    de_xuat = tao_de_xuat(
+        original_term=tu_khoa_goc,
+        resolved_term=tu_khoa_da_chon,
+        trademark=danh_gia,
+        summary=tom_tat,
     )
     return {
-        "term": resolved_term,
-        "original_term": original_term,
-        "resolved_from_input": resolved_term != original_term,
-        "summary": summary,
-        "trademark": trademark,
-        "suggested_fix": suggested_fix,
-        "results": web_results[:5],
-        "wiki_summary": wiki_summary,
-        "display_image": choose_display_image(wiki_summary, web_results),
+        "term": tu_khoa_da_chon,
+        "original_term": tu_khoa_goc,
+        "resolved_from_input": tu_khoa_da_chon != tu_khoa_goc,
+        "summary": tom_tat,
+        "trademark": danh_gia,
+        "suggested_fix": de_xuat,
+        "results": ket_qua_web[:5],
+        "wiki_summary": tom_tat_wiki,
+        "display_image": chon_anh_hien_thi(tom_tat_wiki, ket_qua_web),
         "used_google_api": has_google_api_credentials(),
-        "detected_terms": [report["term"] for report in reports],
-        "all_reports": reports,
+        "detected_terms": [bao_cao["term"] for bao_cao in cac_bao_cao],
+        "all_reports": cac_bao_cao,
     }
 
 
-def fetch_google_like_results(term: str) -> list[SearchResult]:
+def lay_ket_qua_tim_kiem(term: str) -> list[SearchResult]:
     if has_google_api_credentials():
         try:
             api_results = fetch_google_custom_search(term)
@@ -385,7 +385,7 @@ def fetch_google_like_results(term: str) -> list[SearchResult]:
         return []
 
 
-def resolve_focus_terms(term: str) -> list[str]:
+def tach_tu_khoa_chinh(term: str) -> list[str]:
     cleaned = normalize_space(term)
     if not cleaned:
         return []
@@ -405,12 +405,12 @@ def resolve_focus_terms(term: str) -> list[str]:
     if len(cleaned.split()) <= 4:
         return [cleaned]
 
-    initial_results = fetch_google_like_results(cleaned)
+    initial_results = lay_ket_qua_tim_kiem(cleaned)
     inferred = infer_term_from_results(cleaned, initial_results)
     return [inferred or cleaned]
 
 
-def build_candidate_reports(
+def tao_bao_cao_ung_vien(
     candidates: list[str],
     original_term: str,
 ) -> list[dict[str, Any]]:
@@ -425,19 +425,19 @@ def build_candidate_reports(
             continue
         seen.add(key)
 
-        results = fetch_google_like_results(cleaned)
+        results = lay_ket_qua_tim_kiem(cleaned)
         wiki_summary = fetch_wikipedia_summary(cleaned)
-        summary = build_summary(results, wiki_summary)
-        trademark = assess_trademark_risk(cleaned, results, wiki_summary, summary)
+        summary = tao_tom_tat(results, wiki_summary)
+        trademark = danh_gia_rui_ro_trademark(cleaned, results, wiki_summary, summary)
         reports.append(
             {
                 "term": cleaned,
                 "results": results,
                 "wiki_summary": wiki_summary,
-                "display_image": choose_display_image(wiki_summary, results),
+                "display_image": chon_anh_hien_thi(wiki_summary, results),
                 "summary": summary,
                 "trademark": trademark,
-                "suggested_fix": build_suggested_fix(
+                "suggested_fix": tao_de_xuat(
                     original_term=original_term,
                     resolved_term=cleaned,
                     trademark=trademark,
@@ -449,10 +449,10 @@ def build_candidate_reports(
     if reports:
         return reports
 
-    fallback_results = fetch_google_like_results(original_term)
+    fallback_results = lay_ket_qua_tim_kiem(original_term)
     fallback_wiki = fetch_wikipedia_summary(original_term)
-    fallback_summary = build_summary(fallback_results, fallback_wiki)
-    fallback_trademark = assess_trademark_risk(
+    fallback_summary = tao_tom_tat(fallback_results, fallback_wiki)
+    fallback_trademark = danh_gia_rui_ro_trademark(
         original_term, fallback_results, fallback_wiki, fallback_summary
     )
     return [
@@ -460,10 +460,10 @@ def build_candidate_reports(
             "term": original_term,
             "results": fallback_results,
             "wiki_summary": fallback_wiki,
-            "display_image": choose_display_image(fallback_wiki, fallback_results),
+            "display_image": chon_anh_hien_thi(fallback_wiki, fallback_results),
             "summary": fallback_summary,
             "trademark": fallback_trademark,
-            "suggested_fix": build_suggested_fix(
+            "suggested_fix": tao_de_xuat(
                 original_term=original_term,
                 resolved_term=original_term,
                 trademark=fallback_trademark,
@@ -473,7 +473,7 @@ def build_candidate_reports(
     ]
 
 
-def choose_primary_report(reports: list[dict[str, Any]], original_term: str) -> dict[str, Any]:
+def chon_bao_cao_chinh(reports: list[dict[str, Any]], original_term: str) -> dict[str, Any]:
     if not reports:
         return {
             "term": original_term,
@@ -637,229 +637,229 @@ def fetch_wikipedia_summary(term: str) -> dict[str, str]:
     }
 
 
-def build_summary(results: list[SearchResult], wiki_summary: dict[str, str]) -> dict[str, Any]:
-    evidence_parts = [wiki_summary.get("extract", "")]
-    evidence_parts.extend(result.snippet for result in results if result.snippet)
-    evidence_text = f" {' '.join(evidence_parts)} ".lower()
+def tao_tom_tat(results: list[SearchResult], wiki_summary: dict[str, str]) -> dict[str, Any]:
+    cac_doan_du_lieu = [wiki_summary.get("extract", "")]
+    cac_doan_du_lieu.extend(result.snippet for result in results if result.snippet)
+    van_ban_doi_chieu = f" {' '.join(cac_doan_du_lieu)} ".lower()
 
-    entity_type = infer_entity_type(evidence_text)
-    birth_year = extract_birth_year(evidence_text)
-    wiki_overview = wiki_summary.get("extract", "")
-    best_result = choose_best_result(results)
-    result_overview = best_result.snippet if best_result else first_non_empty([result.snippet for result in results])
-    is_ambiguous = is_ambiguous_summary(wiki_overview)
+    loai_thuc_the = infer_entity_type(van_ban_doi_chieu)
+    nam_sinh = extract_birth_year(van_ban_doi_chieu)
+    mo_ta_wiki = wiki_summary.get("extract", "")
+    ket_qua_tot_nhat = choose_best_result(results)
+    mo_ta_tu_ket_qua = ket_qua_tot_nhat.snippet if ket_qua_tot_nhat else first_non_empty([result.snippet for result in results])
+    bi_nhieu_nghia = is_ambiguous_summary(mo_ta_wiki)
 
-    if wiki_overview and not is_ambiguous:
-        overview = translate_text(wiki_overview, target_lang="vi") or wiki_overview
-    elif result_overview:
-        overview = translate_text(result_overview, target_lang="vi") or result_overview
-    elif wiki_overview:
-        overview = translate_text(wiki_overview, target_lang="vi") or wiki_overview
+    if mo_ta_wiki and not bi_nhieu_nghia:
+        overview = translate_text(mo_ta_wiki, target_lang="vi") or mo_ta_wiki
+    elif mo_ta_tu_ket_qua:
+        overview = translate_text(mo_ta_tu_ket_qua, target_lang="vi") or mo_ta_tu_ket_qua
+    elif mo_ta_wiki:
+        overview = translate_text(mo_ta_wiki, target_lang="vi") or mo_ta_wiki
     else:
         overview = "Chưa lấy được mô tả rõ ràng cho từ khóa này."
     overview = shorten_text(overview, 220)
 
-    facts: list[str] = []
-    if entity_type:
-        facts.append(f"Loại: {entity_type}.")
-    if birth_year:
-        facts.append(f"Năm sinh: {birth_year}.")
+    thong_tin_ngan: list[str] = []
+    if loai_thuc_the:
+        thong_tin_ngan.append(f"Loại: {loai_thuc_the}.")
+    if nam_sinh:
+        thong_tin_ngan.append(f"Năm sinh: {nam_sinh}.")
     if results:
-        facts.append(f"Kết quả tham khảo: {len(results)}.")
+        thong_tin_ngan.append(f"Kết quả tham khảo: {len(results)}.")
     if wiki_summary.get("url"):
-        facts.append("Có thêm nguồn Wikipedia.")
-    if is_ambiguous:
-        facts.append("Từ khóa này có thể đang mang nhiều nghĩa.")
+        thong_tin_ngan.append("Có thêm nguồn Wikipedia.")
+    if bi_nhieu_nghia:
+        thong_tin_ngan.append("Từ khóa này có thể đang mang nhiều nghĩa.")
 
     return {
         "overview": overview,
-        "facts": facts,
-        "entity_type": entity_type,
-        "birth_year": birth_year,
+        "facts": thong_tin_ngan,
+        "entity_type": loai_thuc_the,
+        "birth_year": nam_sinh,
         "top_matches": build_top_matches(results),
     }
 
 
-def assess_trademark_risk(
+def danh_gia_rui_ro_trademark(
     term: str,
     results: list[SearchResult],
     wiki_summary: dict[str, str],
     summary: dict[str, Any],
 ) -> dict[str, Any]:
-    combined_text = " ".join(
+    van_ban_gop = " ".join(
         [wiki_summary.get("extract", "")]
         + [result.title for result in results]
         + [result.snippet for result in results]
     ).lower()
-    normalized_term = term.lower().strip()
-    is_political = phat_hien_tin_hieu_chinh_tri(term, combined_text)
-    is_famous_brand = normalized_term in FAMOUS_BRAND_KEYWORDS
-    is_famous_person = normalized_term in FAMOUS_PERSON_KEYWORDS
-    is_famous_slogan = normalized_term in FAMOUS_SLOGANS
-    has_ip_brand_signals = any(keyword in combined_text for keyword in IP_BRAND_HINTS)
-    entity_type = summary.get("entity_type")
+    tu_khoa_chuan = term.lower().strip()
+    co_tin_hieu_chinh_tri = phat_hien_tin_hieu_chinh_tri(term, van_ban_gop)
+    la_thuong_hieu_lon = tu_khoa_chuan in FAMOUS_BRAND_KEYWORDS
+    la_nguoi_noi_tieng = tu_khoa_chuan in FAMOUS_PERSON_KEYWORDS
+    la_slogan_noi_tieng = tu_khoa_chuan in FAMOUS_SLOGANS
+    co_tin_hieu_ip_brand = any(keyword in van_ban_gop for keyword in IP_BRAND_HINTS)
+    loai_thuc_the = summary.get("entity_type")
 
-    reasons: list[str] = []
-    score = 0
+    ly_do: list[str] = []
+    diem = 0
 
-    if any(keyword in combined_text for keyword in ("registered trademark", "trademark", "®", " tm ")):
-        score += 45
-        reasons.append("Có nhắc trực tiếp trademark")
+    if any(keyword in van_ban_gop for keyword in ("registered trademark", "trademark", "®", " tm ")):
+        diem += 45
+        ly_do.append("Có nhắc trực tiếp trademark")
 
-    if any(keyword in combined_text for keyword in TRADEMARK_KEYWORDS):
-        score += 30
-        reasons.append("Tên giống thương hiệu")
+    if any(keyword in van_ban_gop for keyword in TRADEMARK_KEYWORDS):
+        diem += 30
+        ly_do.append("Tên giống thương hiệu")
 
     if summary.get("entity_type") == "Con người":
-        score -= 25
-        reasons.append("Thiên về tên người")
+        diem -= 25
+        ly_do.append("Thiên về tên người")
 
-    if len(normalized_term.split()) <= 3 and normalized_term.isascii():
-        score += 10
+    if len(tu_khoa_chuan.split()) <= 3 and tu_khoa_chuan.isascii():
+        diem += 10
 
-    exact_mentions = sum(1 for result in results if normalized_term in result.title.lower())
-    if exact_mentions >= 2:
-        score += 15
-        reasons.append("Tên xuất hiện lặp lại trong kết quả tìm kiếm")
+    so_lan_nhac_ten = sum(1 for result in results if tu_khoa_chuan in result.title.lower())
+    if so_lan_nhac_ten >= 2:
+        diem += 15
+        ly_do.append("Tên xuất hiện lặp lại trong kết quả tìm kiếm")
 
-    if has_ip_brand_signals:
-        score += 25
-        reasons.append("Có dấu hiệu IP/thương hiệu")
+    if co_tin_hieu_ip_brand:
+        diem += 25
+        ly_do.append("Có dấu hiệu IP/thương hiệu")
 
-    if is_famous_brand:
-        score = max(score, 85)
-        reasons.append(f"Trùng thương hiệu {to_display_name(normalized_term)}")
+    if la_thuong_hieu_lon:
+        diem = max(diem, 85)
+        ly_do.append(f"Trùng thương hiệu {to_display_name(tu_khoa_chuan)}")
 
-    if is_famous_slogan:
-        score = max(score, 88)
-        reasons.append(f"Trùng slogan của {FAMOUS_SLOGANS[normalized_term]}")
+    if la_slogan_noi_tieng:
+        diem = max(diem, 88)
+        ly_do.append(f"Trùng slogan của {FAMOUS_SLOGANS[tu_khoa_chuan]}")
 
-    if is_famous_person:
-        score = max(score, 82)
-        reasons.append(f"Trùng public figure {FAMOUS_PERSON_DISPLAY.get(normalized_term, to_display_name(normalized_term))}")
+    if la_nguoi_noi_tieng:
+        diem = max(diem, 82)
+        ly_do.append(f"Trùng public figure {FAMOUS_PERSON_DISPLAY.get(tu_khoa_chuan, to_display_name(tu_khoa_chuan))}")
 
-    if is_political:
-        score = max(score, 70)
-        reasons.append("Liên quan chính trị")
+    if co_tin_hieu_chinh_tri:
+        diem = max(diem, 70)
+        ly_do.append("Liên quan chính trị")
 
-    trademark_classes = extract_trademark_classes(combined_text)
-    class_context = build_class_context(trademark_classes)
-    if class_context["status"] == "non_relevant" and score > 0:
-        score = min(score, 30)
-        reasons.append("Trademark không nằm trong class sản phẩm POD của công ty")
-    elif class_context["status"] == "relevant" and score > 0:
-        score = max(score, 65)
-        reasons.append(f"Trademark có class liên quan POD: {class_context['classes_text']}")
+    cac_class_trademark = trich_xuat_class_trademark(van_ban_gop)
+    ngu_canh_class = tao_ngu_canh_class(cac_class_trademark)
+    if ngu_canh_class["status"] == "non_relevant" and diem > 0:
+        diem = min(diem, 30)
+        ly_do.append("Trademark không nằm trong class sản phẩm POD của công ty")
+    elif ngu_canh_class["status"] == "relevant" and diem > 0:
+        diem = max(diem, 65)
+        ly_do.append(f"Trademark có class liên quan POD: {ngu_canh_class['classes_text']}")
 
-    copyright_analysis = assess_copyright_risk(
+    phan_tich_ban_quyen = assess_copyright_risk(
         term=term,
-        combined_text=combined_text,
-        is_famous_brand=is_famous_brand,
-        has_ip_brand_signals=has_ip_brand_signals,
-        is_famous_slogan=is_famous_slogan,
+        combined_text=van_ban_gop,
+        is_famous_brand=la_thuong_hieu_lon,
+        has_ip_brand_signals=co_tin_hieu_ip_brand,
+        is_famous_slogan=la_slogan_noi_tieng,
     )
-    public_figure_analysis = assess_public_figure_risk(
+    phan_tich_nguoi_noi_tieng = assess_public_figure_risk(
         term=term,
-        combined_text=combined_text,
-        is_political=is_political,
-        is_famous_person=is_famous_person,
-        entity_type=entity_type,
+        combined_text=van_ban_gop,
+        is_political=co_tin_hieu_chinh_tri,
+        is_famous_person=la_nguoi_noi_tieng,
+        entity_type=loai_thuc_the,
     )
 
-    trademark_analysis = build_analysis_block(
+    phan_tich_trademark = build_analysis_block(
         title="Trademark risk",
-        score=score,
-        reasons=reasons,
+        score=diem,
+        reasons=ly_do,
         high_label="Có đăng ký hoặc sử dụng thương hiệu rất mạnh",
         medium_label="Có dấu hiệu liên quan đến thương hiệu",
         low_label=(
             "Trademark không trùng class sản phẩm của công ty"
-            if class_context["status"] == "non_relevant"
+            if ngu_canh_class["status"] == "non_relevant"
             else "Chưa thấy dấu hiệu thương hiệu mạnh"
         ),
     )
-    context_tags = detect_context_tags(term, combined_text)
+    nhan_ngu_canh = detect_context_tags(term, van_ban_gop)
 
-    ip_rights_analysis = build_ip_rights_analysis(
-        trademark_analysis,
-        copyright_analysis,
-        public_figure_analysis,
+    phan_tich_quyen_so_huu_tri_tue = build_ip_rights_analysis(
+        phan_tich_trademark,
+        phan_tich_ban_quyen,
+        phan_tich_nguoi_noi_tieng,
     )
-    analyses = [trademark_analysis, copyright_analysis, public_figure_analysis, ip_rights_analysis]
-    overall_score = max(analysis["score"] for analysis in analyses)
-    overall_reasons = collect_overall_reasons(analyses)
-    overall_reason_text = overall_reasons[0] if overall_reasons else ""
+    cac_phan_tich = [phan_tich_trademark, phan_tich_ban_quyen, phan_tich_nguoi_noi_tieng, phan_tich_quyen_so_huu_tri_tue]
+    diem_tong = max(phan_tich["score"] for phan_tich in cac_phan_tich)
+    ly_do_tong = collect_overall_reasons(cac_phan_tich)
+    ly_do_chinh = ly_do_tong[0] if ly_do_tong else ""
 
-    if overall_score >= 70:
+    if diem_tong >= 70:
         level = "Cao"
         level_class = "high"
-        verdict = overall_reason_text or "Có ít nhất một rủi ro mạnh trong 3 nhóm phân tích."
-    elif overall_score >= 35:
+        verdict = ly_do_chinh or "Có ít nhất một rủi ro mạnh trong 3 nhóm phân tích."
+    elif diem_tong >= 35:
         level = "Trung bình"
         level_class = "medium"
-        verdict = overall_reason_text or "Có rủi ro ở ít nhất một nhóm phân tích."
+        verdict = ly_do_chinh or "Có rủi ro ở ít nhất một nhóm phân tích."
     else:
         level = "Thấp"
         level_class = "low"
-        if all(analysis["score"] <= 15 for analysis in analyses):
+        if all(phan_tich["score"] <= 15 for phan_tich in cac_phan_tich):
             verdict = "Từ khóa an toàn, có thể sử dụng."
         else:
-            verdict = overall_reason_text or "Chưa thấy rủi ro mạnh trong 3 nhóm phân tích."
+            verdict = ly_do_chinh or "Chưa thấy rủi ro mạnh trong 3 nhóm phân tích."
 
-    if trademark_analysis["score"] >= 70:
+    if phan_tich_trademark["score"] >= 70:
         is_trademark = "Có khả năng cao"
-    elif trademark_analysis["score"] >= 35:
+    elif phan_tich_trademark["score"] >= 35:
         is_trademark = "Có thể"
     else:
         is_trademark = "Chưa rõ"
 
-    if public_figure_analysis["score"] >= 70 and is_political:
+    if phan_tich_nguoi_noi_tieng["score"] >= 70 and co_tin_hieu_chinh_tri:
         consequence = (
             "Nếu sử dụng, rủi ro cao: dễ bị từ chối quảng cáo, gỡ nội dung, khóa gian hàng "
             "hoặc phát sinh khiếu nại liên quan chính trị."
         )
-    elif overall_score >= 70:
+    elif diem_tong >= 70:
         consequence = (
             "Nếu sử dụng, có thể bị khiếu nại quyền sở hữu trí tuệ, gỡ listing, gỡ nội dung hoặc phát sinh tranh chấp."
         )
-    elif overall_score >= 35:
+    elif diem_tong >= 35:
         consequence = "Nếu sử dụng, có nguy cơ bị cảnh báo hoặc bị khiếu nại ở ít nhất một nhóm rủi ro."
     else:
-        if all(analysis["score"] <= 15 for analysis in analyses):
+        if all(phan_tich["score"] <= 15 for phan_tich in cac_phan_tich):
             consequence = "Hiện chưa thấy dấu hiệu rủi ro rõ, có thể sử dụng."
         else:
             consequence = "Nếu sử dụng, rủi ro hiện chưa cao nhưng vẫn nên tra cứu chính thức trước."
 
     return {
-        "score": overall_score,
+        "score": diem_tong,
         "level": level,
         "level_class": level_class,
         "verdict": verdict,
-        "action_recommendation": build_action_recommendation(level, overall_score, analyses),
-        "explanation": build_risk_explanation(term, level, overall_reasons, analyses, summary, class_context),
-        "matched_elements": overall_reasons[:3],
-        "confidence_level": build_confidence_level(overall_score, overall_reasons, results),
-        "advanced_breakdown": build_advanced_breakdown(term, overall_score, analyses, context_tags, class_context),
-        "design_safe": build_design_safe_notes(term, overall_score, overall_reasons),
+        "action_recommendation": tao_khuyen_nghi_hanh_dong(level, diem_tong, cac_phan_tich),
+        "explanation": build_risk_explanation(term, level, ly_do_tong, cac_phan_tich, summary, ngu_canh_class),
+        "matched_elements": ly_do_tong[:3],
+        "confidence_level": tao_muc_tin_cay(diem_tong, ly_do_tong, results),
+        "advanced_breakdown": tao_phan_tich_chi_tiet(term, diem_tong, cac_phan_tich, nhan_ngu_canh, ngu_canh_class),
+        "design_safe": build_design_safe_notes(term, diem_tong, ly_do_tong),
         "trademark_records": [],
-        "official_sources": build_official_sources(term),
+        "official_sources": tao_nguon_tra_cuu_chinh_thuc(term),
         "top_label": build_top_label(
             term=term,
-            context_tags=context_tags,
-            trademark_analysis=trademark_analysis,
-            copyright_analysis=copyright_analysis,
-            public_figure_analysis=public_figure_analysis,
-            is_famous_slogan=is_famous_slogan,
-            is_famous_brand=is_famous_brand,
-            is_famous_person=is_famous_person,
-            is_political=is_political,
+            context_tags=nhan_ngu_canh,
+            trademark_analysis=phan_tich_trademark,
+            copyright_analysis=phan_tich_ban_quyen,
+            public_figure_analysis=phan_tich_nguoi_noi_tieng,
+            is_famous_slogan=la_slogan_noi_tieng,
+            is_famous_brand=la_thuong_hieu_lon,
+            is_famous_person=la_nguoi_noi_tieng,
+            is_political=co_tin_hieu_chinh_tri,
         ),
         "is_trademark": is_trademark,
         "consequence": consequence,
-        "is_political": is_political,
-        "reasons": overall_reasons,
-        "analyses": analyses,
-        "context_tags": context_tags,
+        "is_political": co_tin_hieu_chinh_tri,
+        "reasons": ly_do_tong,
+        "analyses": cac_phan_tich,
+        "context_tags": nhan_ngu_canh,
         "search_links": [
             {
                 "label": "Google Search",
@@ -885,7 +885,7 @@ def build_risk_explanation(
     reason = overall_reasons[0] if overall_reasons else "chưa thấy tín hiệu rủi ro rõ"
     entity_type = summary.get("entity_type") or "thực thể chưa rõ"
     term_lower = term.lower()
-    strongest_title = translate_analysis_title(strongest["title"])
+    strongest_title = dich_ten_nhom_phan_tich(strongest["title"])
     if class_context and class_context.get("status") == "non_relevant":
         return (
             f"Trademark của '{term}' đang được dữ liệu tìm kiếm nhắc ở {class_context['classes_text']}, "
@@ -950,7 +950,7 @@ def build_risk_explanation(
     )
 
 
-def build_official_sources(term: str) -> list[dict[str, str]]:
+def tao_nguon_tra_cuu_chinh_thuc(term: str) -> list[dict[str, str]]:
     encoded = quote_plus(term)
     return [
         {
@@ -964,7 +964,7 @@ def build_official_sources(term: str) -> list[dict[str, str]]:
     ]
 
 
-def extract_trademark_classes(text: str) -> list[int]:
+def trich_xuat_class_trademark(text: str) -> list[int]:
     classes: set[int] = set()
     patterns = (
         r"(?:international\s+class|nice\s+class|class|classes|ic)\s*(?:no\.?\s*)?0?(\d{1,3})",
@@ -982,7 +982,7 @@ def extract_trademark_classes(text: str) -> list[int]:
     return sorted(classes)
 
 
-def build_class_context(classes: list[int]) -> dict[str, Any]:
+def tao_ngu_canh_class(classes: list[int]) -> dict[str, Any]:
     relevant = [class_number for class_number in classes if class_number in POD_RELEVANT_TRADEMARK_CLASSES]
     classes_text = ", ".join(f"Class {class_number}" for class_number in classes) if classes else "chưa thấy class rõ"
     relevant_text = ", ".join(
@@ -1019,7 +1019,7 @@ def build_class_context(classes: list[int]) -> dict[str, Any]:
     }
 
 
-def build_confidence_level(score: int, reasons: list[str], results: list[SearchResult]) -> str:
+def tao_muc_tin_cay(score: int, reasons: list[str], results: list[SearchResult]) -> str:
     if score >= 70 and reasons:
         return "Cao"
     if score >= 35 or results:
@@ -1027,7 +1027,7 @@ def build_confidence_level(score: int, reasons: list[str], results: list[SearchR
     return "Thấp"
 
 
-def build_advanced_breakdown(
+def tao_phan_tich_chi_tiet(
     term: str,
     overall_score: int,
     analyses: list[dict[str, Any]],
@@ -1041,7 +1041,7 @@ def build_advanced_breakdown(
     rows = [
         {"label": "Điểm tương đồng", "value": f"{overall_score}%"},
         {"label": "Độ nhạy thị trường", "value": market_sensitivity},
-        {"label": "Nguồn rủi ro chính", "value": translate_analysis_title(strongest["title"])},
+        {"label": "Nguồn rủi ro chính", "value": dich_ten_nhom_phan_tich(strongest["title"])},
         {"label": "Ngữ cảnh", "value": context},
     ]
     if not class_context or class_context.get("status") != "unknown":
@@ -1049,7 +1049,7 @@ def build_advanced_breakdown(
     return rows
 
 
-def translate_analysis_title(title: str) -> str:
+def dich_ten_nhom_phan_tich(title: str) -> str:
     translations = {
         "Trademark risk": "Trademark",
         "Copyright risk": "Copyright",
@@ -1240,7 +1240,7 @@ def build_analysis_block(
         "level": level,
         "verdict": verdict,
         "consequence": consequence,
-        "reasons": prioritize_specific_reasons(reasons)[:2],
+        "reasons": uu_tien_ly_do_cu_the(reasons)[:2],
     }
 
 
@@ -1277,7 +1277,7 @@ def build_ip_rights_consequence(score: int) -> str:
     return "Chưa thấy hậu quả IPR rõ, nhưng vẫn nên tránh copy logo, nhân vật, slogan hoặc hình ảnh có quyền."
 
 
-def build_action_recommendation(level: str, score: int, analyses: list[dict[str, Any]]) -> str:
+def tao_khuyen_nghi_hanh_dong(level: str, score: int, analyses: list[dict[str, Any]]) -> str:
     ip_score = next(
         (analysis["score"] for analysis in analyses if analysis["title"] == "Intellectual Property Rights"),
         score,
@@ -1294,10 +1294,10 @@ def collect_overall_reasons(analyses: list[dict[str, Any]]) -> list[str]:
     reasons: list[str] = []
     for analysis in ordered:
         reasons.extend(analysis.get("reasons", []))
-    return prioritize_specific_reasons(reasons)[:3]
+    return uu_tien_ly_do_cu_the(reasons)[:3]
 
 
-def build_suggested_fix(
+def tao_de_xuat(
     original_term: str,
     resolved_term: str,
     trademark: dict[str, Any],
@@ -1538,8 +1538,8 @@ def tao_ly_do_van_hoa_dai_chung(normalized_term: str) -> str:
     return f"Trùng IP văn hóa đại chúng {display_name}"
 
 
-def prioritize_specific_reasons(reasons: list[str]) -> list[str]:
-    reasons = merge_related_ip_reasons(reasons)
+def uu_tien_ly_do_cu_the(reasons: list[str]) -> list[str]:
+    reasons = gop_ly_do_ip_lien_quan(reasons)
     specific_markers = ("Trùng", "Liên quan", "Slogan", "Có copyright gián tiếp")
     ordered = sorted(
         reasons,
@@ -1558,7 +1558,7 @@ def prioritize_specific_reasons(reasons: list[str]) -> list[str]:
     return result
 
 
-def merge_related_ip_reasons(reasons: list[str]) -> list[str]:
+def gop_ly_do_ip_lien_quan(reasons: list[str]) -> list[str]:
     normalized_reasons = list(reasons)
     for brand in FAMOUS_BRAND_KEYWORDS:
         display = to_display_name(brand)
@@ -1973,7 +1973,7 @@ def shorten_text(text: str, limit: int) -> str:
     return f"{shortened}..."
 
 
-def choose_display_image(wiki_summary: dict[str, str], results: list[SearchResult]) -> str:
+def chon_anh_hien_thi(wiki_summary: dict[str, str], results: list[SearchResult]) -> str:
     image = normalize_space(wiki_summary.get("image", ""))
     if image:
         return image
