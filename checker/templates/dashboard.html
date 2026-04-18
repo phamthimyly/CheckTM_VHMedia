@@ -222,7 +222,7 @@
                                 </span>
                             </td>
                             <td>{{ item.diem_rui_ro }}/100</td>
-                            <td>{{ item.thoi_gian|date:"d/m/Y H:i" }}</td>
+                            <td>{{ item.thoi_gian_hien_thi|default:item.thoi_gian }}</td>
                         </tr>
                     {% empty %}
                         <tr>

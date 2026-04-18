@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.db import OperationalError, ProgrammingError
 from django.db.models import Count, Q
 from django.shortcuts import redirect, render
+from django.utils import timezone
 
 from .models import LichSuKiemTra
 from .services import lay_bao_cao_tu_khoa
@@ -22,6 +23,55 @@ GOI_Y_TU_KHOA = [
 ]
 
 user_logged_in.disconnect(update_last_login, dispatch_uid="update_last_login")
+
+
+def lay_lich_su_session(request) -> list[dict]:
+    return request.session.get("lich_su_check", [])
+
+
+def lay_ten_lich_su_session(request) -> list[str]:
+    return [
+        item.get("tu_khoa_goc") or item.get("tu_khoa")
+        for item in lay_lich_su_session(request)[:6]
+        if item.get("tu_khoa_goc") or item.get("tu_khoa")
+    ]
+
+
+def luu_lich_su_session(request, bao_cao: dict, diem_rui_ro: int, muc_rui_ro: str) -> None:
+    if not request.user.is_authenticated:
+        return
+    tu_khoa = bao_cao.get("term") or ""
+    tu_khoa_goc = bao_cao.get("original_term") or tu_khoa
+    ban_ghi = {
+        "tu_khoa": tu_khoa,
+        "tu_khoa_goc": tu_khoa_goc,
+        "diem_rui_ro": diem_rui_ro,
+        "muc_rui_ro": muc_rui_ro,
+        "co_rui_ro": diem_rui_ro >= 35,
+        "thoi_gian_hien_thi": timezone.localtime().strftime("%d/%m/%Y %H:%M"),
+    }
+    lich_su = [
+        item
+        for item in lay_lich_su_session(request)
+        if (item.get("tu_khoa_goc") or item.get("tu_khoa") or "").lower() != tu_khoa_goc.lower()
+    ]
+    request.session["lich_su_check"] = [ban_ghi, *lich_su][:20]
+    request.session.modified = True
+
+
+def xoa_lich_su_session(request, gia_tri: str) -> None:
+    gia_tri = gia_tri.lower()
+    request.session["lich_su_check"] = [
+        item
+        for item in lay_lich_su_session(request)
+        if (item.get("tu_khoa_goc") or item.get("tu_khoa") or "").lower() != gia_tri
+    ]
+    request.session.modified = True
+
+
+def xoa_toan_bo_lich_su_session(request) -> None:
+    request.session["lich_su_check"] = []
+    request.session.modified = True
 
 
 def tao_admin_mac_dinh() -> None:
@@ -71,19 +121,41 @@ def dang_xuat(request):
 
 @login_required
 def dashboard(request):
-    thong_ke = LichSuKiemTra.objects.filter(user=request.user).aggregate(
-        tong=Count("id"),
-        an_toan=Count("id", filter=Q(co_rui_ro=False)),
-        co_rui_ro=Count("id", filter=Q(co_rui_ro=True)),
-    )
-    lich_su_gan_day = LichSuKiemTra.objects.filter(user=request.user)[:8]
+    lich_su_session = lay_lich_su_session(request)
+    try:
+        thong_ke = LichSuKiemTra.objects.filter(user=request.user).aggregate(
+            tong=Count("id"),
+            an_toan=Count("id", filter=Q(co_rui_ro=False)),
+            co_rui_ro=Count("id", filter=Q(co_rui_ro=True)),
+        )
+        lich_su_db = list(
+            LichSuKiemTra.objects.filter(user=request.user)
+            .values("tu_khoa", "muc_rui_ro", "diem_rui_ro", "co_rui_ro", "thoi_gian")[:8]
+        )
+        for item in lich_su_db:
+            item["thoi_gian_hien_thi"] = timezone.localtime(item["thoi_gian"]).strftime("%d/%m/%Y %H:%M")
+    except (OperationalError, ProgrammingError):
+        thong_ke = {"tong": 0, "an_toan": 0, "co_rui_ro": 0}
+        lich_su_db = []
+
+    if thong_ke["tong"] or not lich_su_session:
+        tong_luot_check = thong_ke["tong"] or 0
+        tu_khoa_an_toan = thong_ke["an_toan"] or 0
+        tu_khoa_co_rui_ro = thong_ke["co_rui_ro"] or 0
+        lich_su_gan_day = lich_su_db
+    else:
+        tong_luot_check = len(lich_su_session)
+        tu_khoa_an_toan = sum(1 for item in lich_su_session if not item.get("co_rui_ro"))
+        tu_khoa_co_rui_ro = sum(1 for item in lich_su_session if item.get("co_rui_ro"))
+        lich_su_gan_day = lich_su_session[:8]
+
     return render(
         request,
         "dashboard.html",
         {
-            "tong_luot_check": thong_ke["tong"] or 0,
-            "tu_khoa_an_toan": thong_ke["an_toan"] or 0,
-            "tu_khoa_co_rui_ro": thong_ke["co_rui_ro"] or 0,
+            "tong_luot_check": tong_luot_check,
+            "tu_khoa_an_toan": tu_khoa_an_toan,
+            "tu_khoa_co_rui_ro": tu_khoa_co_rui_ro,
             "lich_su_gan_day": lich_su_gan_day,
         },
     )
@@ -104,6 +176,7 @@ def luu_lich_su_check(request, bao_cao: dict) -> None:
         return
     muc_rui_ro = bao_cao.get("trademark", {}).get("level", "Thấp")
     diem_rui_ro = int(bao_cao.get("trademark", {}).get("score", 0) or 0)
+    luu_lich_su_session(request, bao_cao, diem_rui_ro, muc_rui_ro)
     try:
         LichSuKiemTra.objects.create(
             user=request.user,
@@ -123,26 +196,44 @@ def home(request):
     loi = ""
     lich_su = []
     if request.user.is_authenticated:
-        lich_su = list(
-            LichSuKiemTra.objects.filter(user=request.user)
-            .values_list("tu_khoa_goc", flat=True)[:6]
-        )
+        try:
+            lich_su = list(
+                LichSuKiemTra.objects.filter(user=request.user)
+                .values_list("tu_khoa_goc", flat=True)[:6]
+            )
+        except (OperationalError, ProgrammingError):
+            lich_su = []
+        if not lich_su:
+            lich_su = lay_ten_lich_su_session(request)
 
     if request.method == "POST":
         hanh_dong = (request.POST.get("action") or "").strip()
         gia_tri_lich_su = (request.POST.get("history_value") or "").strip()
 
         if hanh_dong == "delete_history" and gia_tri_lich_su and request.user.is_authenticated:
-            LichSuKiemTra.objects.filter(
-                Q(tu_khoa_goc__iexact=gia_tri_lich_su) | Q(tu_khoa__iexact=gia_tri_lich_su),
-                user=request.user,
-            ).delete()
-            lich_su = list(
-                LichSuKiemTra.objects.filter(user=request.user)
-                .values_list("tu_khoa_goc", flat=True)[:6]
-            )
+            try:
+                LichSuKiemTra.objects.filter(
+                    Q(tu_khoa_goc__iexact=gia_tri_lich_su) | Q(tu_khoa__iexact=gia_tri_lich_su),
+                    user=request.user,
+                ).delete()
+            except (OperationalError, ProgrammingError):
+                pass
+            xoa_lich_su_session(request, gia_tri_lich_su)
+            try:
+                lich_su = list(
+                    LichSuKiemTra.objects.filter(user=request.user)
+                    .values_list("tu_khoa_goc", flat=True)[:6]
+                )
+            except (OperationalError, ProgrammingError):
+                lich_su = []
+            if not lich_su:
+                lich_su = lay_ten_lich_su_session(request)
         elif hanh_dong == "clear_history" and request.user.is_authenticated:
-            LichSuKiemTra.objects.filter(user=request.user).delete()
+            try:
+                LichSuKiemTra.objects.filter(user=request.user).delete()
+            except (OperationalError, ProgrammingError):
+                pass
+            xoa_toan_bo_lich_su_session(request)
             lich_su = []
         elif hanh_dong == "search_history" and gia_tri_lich_su and request.user.is_authenticated:
             tu_khoa = gia_tri_lich_su
@@ -160,10 +251,15 @@ def home(request):
                     bao_cao = lay_bao_cao_tu_khoa(tu_khoa)
                     luu_lich_su_check(request, bao_cao)
                     if request.user.is_authenticated:
-                        lich_su = list(
-                            LichSuKiemTra.objects.filter(user=request.user)
-                            .values_list("tu_khoa_goc", flat=True)[:6]
-                        )
+                        try:
+                            lich_su = list(
+                                LichSuKiemTra.objects.filter(user=request.user)
+                                .values_list("tu_khoa_goc", flat=True)[:6]
+                            )
+                        except (OperationalError, ProgrammingError):
+                            lich_su = []
+                        if not lich_su:
+                            lich_su = lay_ten_lich_su_session(request)
                 except Exception:
                     loi = THONG_BAO_LOI_DU_LIEU
 
