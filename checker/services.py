@@ -37,6 +37,26 @@ PEOPLE_HINTS = (
     "songwriter",
 )
 
+PUBLIC_FIGURE_HINTS = (
+    "singer",
+    "singer-songwriter",
+    "songwriter",
+    "musician",
+    "rapper",
+    "recording artist",
+    "music artist",
+    "actor",
+    "actress",
+    "footballer",
+    "athlete",
+    "politician",
+    "president",
+    "youtuber",
+    "influencer",
+    "celebrity",
+    "public figure",
+)
+
 TRADEMARK_KEYWORDS = (
     "trademark",
     "registered trademark",
@@ -397,6 +417,13 @@ def tach_tu_khoa_chinh(term: str) -> list[str]:
     direct_matches = extract_known_entities_from_input(cleaned)
     if direct_matches:
         return direct_matches
+
+    if len(cleaned.split()) <= 2:
+        ket_qua_ban_dau = lay_ket_qua_tim_kiem(cleaned)
+        ten_day_du = infer_term_from_results(cleaned, ket_qua_ban_dau)
+        if should_prefer_inferred_term(cleaned, ten_day_du):
+            return [ten_day_du]
+        return [cleaned]
 
     input_candidates = extract_input_entity_candidates(cleaned)
     if input_candidates:
@@ -1201,9 +1228,9 @@ def assess_public_figure_risk(
     if is_political:
         score = max(score, 92)
         reasons.append("Trùng nhân vật chính trị")
-    if any(keyword in combined_text for keyword in ("president", "singer", "actor", "rapper", "footballer")):
-        score += 20
-        reasons.append("Kết quả mô tả public figure")
+    if contains_phrase(combined_text, PUBLIC_FIGURE_HINTS):
+        score = max(score, 75)
+        reasons.append(f"Kết quả mô tả {term} là người nổi tiếng/public figure")
 
     return build_analysis_block(
         title="Public figure risk",
@@ -1733,6 +1760,25 @@ def infer_term_from_results(original_term: str, results: list[SearchResult]) -> 
     if not candidates:
         return ""
     return max(candidates.items(), key=lambda item: item[1])[0]
+
+
+def should_prefer_inferred_term(original_term: str, inferred_term: str) -> bool:
+    original = normalize_space(original_term)
+    inferred = cleanup_candidate(inferred_term)
+    if not original or not inferred:
+        return False
+
+    original_lower = original.lower()
+    inferred_lower = inferred.lower()
+    if inferred_lower == original_lower:
+        return False
+    if len(inferred.split()) <= len(original.split()):
+        return False
+    if not contains_phrase(inferred_lower, (original_lower,)):
+        return False
+    if len(inferred.split()) > 4:
+        return False
+    return True
 
 
 def split_title_candidates(title: str) -> list[str]:

@@ -1,6 +1,14 @@
 from django.test import SimpleTestCase
 
-from .services import danh_gia_rui_ro_trademark, extract_birth_year, tach_tu_khoa_chinh, tao_tom_tat
+from .services import (
+    SearchResult,
+    danh_gia_rui_ro_trademark,
+    extract_birth_year,
+    infer_term_from_results,
+    should_prefer_inferred_term,
+    tach_tu_khoa_chinh,
+    tao_tom_tat,
+)
 
 
 class ServiceTests(SimpleTestCase):
@@ -42,6 +50,34 @@ class ServiceTests(SimpleTestCase):
 
     def test_tach_duoc_cum_chinh_voi_ten_la(self):
         self.assertEqual(tach_tu_khoa_chinh("Nirvexa premium retro shirt"), ["Nirvexa"])
+
+    def test_uu_tien_ten_day_du_khi_google_goi_y_ro(self):
+        ket_qua = [
+            SearchResult(
+                title="Benson Boone - Official Website",
+                snippet="Benson Boone is an American singer-songwriter.",
+                link="https://example.com",
+                source="Example",
+            )
+        ]
+        ten_suy_ra = infer_term_from_results("Benson", ket_qua)
+        self.assertEqual(ten_suy_ra, "Benson Boone")
+        self.assertTrue(should_prefer_inferred_term("Benson", ten_suy_ra))
+
+    def test_ca_si_tim_tu_google_phai_la_rui_ro_cao(self):
+        tom_tat = tao_tom_tat(
+            [],
+            {"extract": "Benson Boone is an American singer-songwriter and musician."},
+        )
+        bao_cao = danh_gia_rui_ro_trademark(
+            "Benson Boone",
+            [],
+            {"extract": "Benson Boone is an American singer-songwriter and musician."},
+            tom_tat,
+        )
+        rui_ro_nguoi_noi_tieng = next(muc for muc in bao_cao["analyses"] if muc["title"] == "Public figure risk")
+        self.assertGreaterEqual(rui_ro_nguoi_noi_tieng["score"], 70)
+        self.assertGreaterEqual(bao_cao["score"], 70)
 
     def test_hogwarts_khong_bi_xep_nham_la_chinh_tri(self):
         tom_tat = tao_tom_tat(

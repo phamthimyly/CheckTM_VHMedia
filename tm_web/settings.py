@@ -144,6 +144,11 @@ ALLOWED_HOSTS = ["*"]
 import os
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'login'
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
