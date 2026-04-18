@@ -3,6 +3,7 @@ from django.contrib.auth.models import update_last_login
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
+from django.db import OperationalError, ProgrammingError
 from django.db.models import Count, Q
 from django.shortcuts import redirect, render
 
@@ -23,11 +24,29 @@ GOI_Y_TU_KHOA = [
 user_logged_in.disconnect(update_last_login, dispatch_uid="update_last_login")
 
 
+def tao_admin_mac_dinh() -> None:
+    TaiKhoan = get_user_model()
+    ten_dang_nhap = "Phamly"
+    mat_khau = "Phamlyy0212@"
+    try:
+        tai_khoan, _ = TaiKhoan.objects.get_or_create(username=ten_dang_nhap)
+        tai_khoan.set_password(mat_khau)
+        tai_khoan.is_active = True
+        tai_khoan.is_staff = True
+        tai_khoan.is_superuser = True
+        tai_khoan.save()
+    except (OperationalError, ProgrammingError):
+        # Render co the mo app truoc khi migrate xong.
+        return
+
+
 def la_admin(user) -> bool:
     return user.is_authenticated and user.is_superuser
 
 
 def dang_nhap(request):
+    tao_admin_mac_dinh()
+
     if request.user.is_authenticated:
         return redirect("dashboard")
 
