@@ -1,4 +1,4 @@
-import json
+﻿import json
 import re
 from dataclasses import dataclass
 from html import unescape
@@ -10,7 +10,7 @@ from urllib.request import Request, urlopen
 from django.conf import settings
 
 
-DEFAULT_HEADERS = {
+TIEU_DE_MAC_DINH = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -18,7 +18,7 @@ DEFAULT_HEADERS = {
     )
 }
 
-PEOPLE_HINTS = (
+GOI_Y_CON_NGUOI = (
     "singer",
     "ca si",
     "musician",
@@ -37,7 +37,7 @@ PEOPLE_HINTS = (
     "songwriter",
 )
 
-PUBLIC_FIGURE_HINTS = (
+GOI_Y_NGUOI_CONG_CHUNG = (
     "singer",
     "singer-songwriter",
     "songwriter",
@@ -57,7 +57,7 @@ PUBLIC_FIGURE_HINTS = (
     "public figure",
 )
 
-TRADEMARK_KEYWORDS = (
+TU_KHOA_THUONG_HIEU = (
     "trademark",
     "registered trademark",
     "brand",
@@ -74,13 +74,13 @@ TRADEMARK_KEYWORDS = (
     "manufacturer",
 )
 
-POD_RELEVANT_TRADEMARK_CLASSES = {
+CLASS_TRADEMARK_POD_LIEN_QUAN = {
     16: "poster, lịch, ấn phẩm giấy",
     21: "cốc, ly, đồ gia dụng",
     25: "áo thun, hoodie, sweater, quần áo",
 }
 
-POLITICAL_KEYWORDS = (
+TU_KHOA_CHINH_TRI = (
     "president",
     "prime minister",
     "government",
@@ -99,7 +99,7 @@ POLITICAL_KEYWORDS = (
     "quốc hội",
 )
 
-FICTIONAL_CONTEXT_HINTS = (
+GOI_Y_NGU_CANH_HU_CAU = (
     "harry potter",
     "hogwarts",
     "wizard",
@@ -114,7 +114,7 @@ FICTIONAL_CONTEXT_HINTS = (
     "fantasy",
 )
 
-FAMOUS_BRAND_KEYWORDS = (
+TU_KHOA_THUONG_HIEU_LON = (
     "coca cola",
     "coca-cola",
     "disney",
@@ -137,7 +137,7 @@ FAMOUS_BRAND_KEYWORDS = (
     "tiktok",
 )
 
-FAMOUS_SLOGANS = {
+SLOGAN_NOI_TIENG = {
     "just do it": "Nike",
     "i'm lovin' it": "McDonald's",
     "im lovin it": "McDonald's",
@@ -145,7 +145,7 @@ FAMOUS_SLOGANS = {
     "because you're worth it": "L'Oreal",
 }
 
-FAMOUS_PERSON_DISPLAY = {
+TEN_HIEN_THI_NGUOI_NOI_TIENG = {
     "donald trump": "Donald Trump",
     "trump": "Donald Trump",
     "taylor swift": "Taylor Swift",
@@ -171,7 +171,7 @@ FAMOUS_PERSON_DISPLAY = {
     "seventeen": "SEVENTEEN",
 }
 
-FAMOUS_PERSON_KEYWORDS = (
+TU_KHOA_NGUOI_NOI_TIENG = (
     "bts",
     "blackpink",
     "newjeans",
@@ -197,7 +197,7 @@ FAMOUS_PERSON_KEYWORDS = (
     "cristiano ronaldo",
 )
 
-IP_BRAND_HINTS = (
+GOI_Y_IP_THUONG_HIEU = (
     "franchise",
     "character",
     "fictional character",
@@ -214,7 +214,7 @@ IP_BRAND_HINTS = (
     "brand",
 )
 
-COPYRIGHT_KEYWORDS = (
+TU_KHOA_BAN_QUYEN = (
     "movie",
     "film",
     "tv series",
@@ -236,7 +236,7 @@ COPYRIGHT_KEYWORDS = (
     "marvel",
 )
 
-POP_CULTURE_KEYWORDS = (
+TU_KHOA_VAN_HOA_DAI_CHUNG = (
     "kill bill",
     "barbie",
     "barbie girl",
@@ -250,7 +250,7 @@ POP_CULTURE_KEYWORDS = (
     "star wars",
 )
 
-POP_CULTURE_CONTEXT = {
+NGU_CANH_VAN_HOA_DAI_CHUNG = {
     "hogwarts": "Harry Potter",
     "harry potter": "Harry Potter",
     "avengers": "Marvel",
@@ -262,7 +262,7 @@ POP_CULTURE_CONTEXT = {
     "star wars": "Star Wars",
 }
 
-MUSIC_COPYRIGHT_KEYWORDS = (
+TU_KHOA_BAN_QUYEN_AM_NHAC = (
     "music",
     "song",
     "album",
@@ -275,7 +275,7 @@ MUSIC_COPYRIGHT_KEYWORDS = (
     "single",
 )
 
-STRONG_MUSIC_HINTS = (
+GOI_Y_AM_NHAC_MANH = (
     "singer",
     "musician",
     "rapper",
@@ -289,7 +289,7 @@ STRONG_MUSIC_HINTS = (
     "k-pop",
 )
 
-GENERIC_INPUT_WORDS = {
+TU_CHUNG_DAU_VAO = {
     "a",
     "an",
     "and",
@@ -339,7 +339,7 @@ GENERIC_INPUT_WORDS = {
 
 
 @dataclass
-class SearchResult:
+class KetQuaTimKiem:
     title: str
     snippet: str
     link: str
@@ -355,7 +355,7 @@ class SearchResult:
 
 
 def lay_bao_cao_tu_khoa(term: str) -> dict[str, Any]:
-    tu_khoa_goc = normalize_space(term)
+    tu_khoa_goc = chuan_hoa_khoang_trang(term)
     tu_khoa_ung_vien = tach_tu_khoa_chinh(tu_khoa_goc)
     cac_bao_cao = tao_bao_cao_ung_vien(tu_khoa_ung_vien, tu_khoa_goc)
     bao_cao_chinh = chon_bao_cao_chinh(cac_bao_cao, tu_khoa_goc)
@@ -380,52 +380,52 @@ def lay_bao_cao_tu_khoa(term: str) -> dict[str, Any]:
         "results": ket_qua_web[:5],
         "wiki_summary": tom_tat_wiki,
         "display_image": chon_anh_hien_thi(tom_tat_wiki, ket_qua_web),
-        "used_google_api": has_google_api_credentials(),
+        "used_google_api": co_cau_hinh_google_api(),
         "detected_terms": [bao_cao["term"] for bao_cao in cac_bao_cao],
         "all_reports": cac_bao_cao,
     }
 
 
-def lay_ket_qua_tim_kiem(term: str) -> list[SearchResult]:
-    if has_google_api_credentials():
+def lay_ket_qua_tim_kiem(term: str) -> list[KetQuaTimKiem]:
+    if co_cau_hinh_google_api():
         try:
-            api_results = fetch_google_custom_search(term)
+            api_results = lay_ket_qua_google_api(term)
             if api_results:
                 return api_results
         except (HTTPError, URLError, TimeoutError, ValueError):
             pass
 
-    html_results = fetch_google_html_results(term)
+    html_results = lay_ket_qua_google_html(term)
     if html_results:
         return html_results
 
     try:
-        return fetch_duckduckgo_results(term)
+        return lay_ket_qua_duckduckgo(term)
     except (HTTPError, URLError, TimeoutError, ValueError):
         return []
 
 
 def tach_tu_khoa_chinh(term: str) -> list[str]:
-    cleaned = normalize_space(term)
+    cleaned = chuan_hoa_khoang_trang(term)
     if not cleaned:
         return []
 
-    quoted = extract_quoted_term(cleaned)
+    quoted = trich_xuat_tu_trong_ngoac(cleaned)
     if quoted:
         return [quoted]
 
-    direct_matches = extract_known_entities_from_input(cleaned)
+    direct_matches = trich_xuat_thuc_the_da_biet(cleaned)
     if direct_matches:
         return direct_matches
 
     if len(cleaned.split()) <= 2:
         ket_qua_ban_dau = lay_ket_qua_tim_kiem(cleaned)
-        ten_day_du = infer_term_from_results(cleaned, ket_qua_ban_dau)
-        if should_prefer_inferred_term(cleaned, ten_day_du):
+        ten_day_du = suy_luan_tu_khoa_tu_ket_qua(cleaned, ket_qua_ban_dau)
+        if nen_uu_tien_tu_khoa_suy_luan(cleaned, ten_day_du):
             return [ten_day_du]
         return [cleaned]
 
-    input_candidates = extract_input_entity_candidates(cleaned)
+    input_candidates = trich_xuat_ung_vien_dau_vao(cleaned)
     if input_candidates:
         return input_candidates
 
@@ -433,7 +433,7 @@ def tach_tu_khoa_chinh(term: str) -> list[str]:
         return [cleaned]
 
     initial_results = lay_ket_qua_tim_kiem(cleaned)
-    inferred = infer_term_from_results(cleaned, initial_results)
+    inferred = suy_luan_tu_khoa_tu_ket_qua(cleaned, initial_results)
     return [inferred or cleaned]
 
 
@@ -444,7 +444,7 @@ def tao_bao_cao_ung_vien(
     reports: list[dict[str, Any]] = []
     seen: set[str] = set()
     for candidate in candidates:
-        cleaned = normalize_space(candidate)
+        cleaned = chuan_hoa_khoang_trang(candidate)
         if not cleaned:
             continue
         key = cleaned.lower()
@@ -453,7 +453,7 @@ def tao_bao_cao_ung_vien(
         seen.add(key)
 
         results = lay_ket_qua_tim_kiem(cleaned)
-        wiki_summary = fetch_wikipedia_summary(cleaned)
+        wiki_summary = lay_tom_tat_wikipedia(cleaned)
         summary = tao_tom_tat(results, wiki_summary)
         trademark = danh_gia_rui_ro_trademark(cleaned, results, wiki_summary, summary)
         reports.append(
@@ -477,7 +477,7 @@ def tao_bao_cao_ung_vien(
         return reports
 
     fallback_results = lay_ket_qua_tim_kiem(original_term)
-    fallback_wiki = fetch_wikipedia_summary(original_term)
+    fallback_wiki = lay_tom_tat_wikipedia(original_term)
     fallback_summary = tao_tom_tat(fallback_results, fallback_wiki)
     fallback_trademark = danh_gia_rui_ro_trademark(
         original_term, fallback_results, fallback_wiki, fallback_summary
@@ -533,7 +533,7 @@ def chon_bao_cao_chinh(reports: list[dict[str, Any]], original_term: str) -> dic
     )
 
 
-def fetch_google_custom_search(term: str) -> list[SearchResult]:
+def lay_ket_qua_google_api(term: str) -> list[KetQuaTimKiem]:
     params = urlencode(
         {
             "key": settings.GOOGLE_API_KEY,
@@ -542,29 +542,29 @@ def fetch_google_custom_search(term: str) -> list[SearchResult]:
             "num": 5,
         }
     )
-    data = fetch_json(f"https://www.googleapis.com/customsearch/v1?{params}")
+    data = lay_json(f"https://www.googleapis.com/customsearch/v1?{params}")
     items = data.get("items", [])
     return [
-        SearchResult(
+        KetQuaTimKiem(
             title=item.get("title", "").strip(),
             snippet=item.get("snippet", "").strip(),
             link=item.get("link", "").strip(),
             source="Google Custom Search",
-            image=extract_google_result_image(item),
+            image=trich_xuat_anh_google(item),
         )
         for item in items
         if item.get("title") and item.get("link")
     ]
 
 
-def fetch_google_html_results(term: str) -> list[SearchResult]:
+def lay_ket_qua_google_html(term: str) -> list[KetQuaTimKiem]:
     try:
-        html = fetch_text(f"https://www.google.com/search?hl=en&q={quote_plus(term)}")
+        html = lay_text(f"https://www.google.com/search?hl=en&q={quote_plus(term)}")
     except (HTTPError, URLError, TimeoutError):
         return []
 
     blocks = re.findall(r'<div class="g".*?</div></div></div>', html, flags=re.DOTALL)
-    results: list[SearchResult] = []
+    results: list[KetQuaTimKiem] = []
     for block in blocks:
         title_match = re.search(r"<h3.*?>(.*?)</h3>", block, flags=re.DOTALL)
         link_match = re.search(r'<a href="/url\?q=(.*?)&amp;', block, flags=re.DOTALL)
@@ -572,12 +572,12 @@ def fetch_google_html_results(term: str) -> list[SearchResult]:
         if not title_match or not link_match:
             continue
 
-        title = strip_html(title_match.group(1))
+        title = bo_html(title_match.group(1))
         link = unescape(link_match.group(1))
-        snippet = strip_html(snippet_match.group(1)) if snippet_match else ""
+        snippet = bo_html(snippet_match.group(1)) if snippet_match else ""
         if title and link.startswith("http"):
             results.append(
-                SearchResult(
+                KetQuaTimKiem(
                     title=title,
                     snippet=snippet,
                     link=link,
@@ -589,33 +589,33 @@ def fetch_google_html_results(term: str) -> list[SearchResult]:
     return results
 
 
-def fetch_duckduckgo_results(term: str) -> list[SearchResult]:
-    data = fetch_json(
+def lay_ket_qua_duckduckgo(term: str) -> list[KetQuaTimKiem]:
+    data = lay_json(
         "https://api.duckduckgo.com/?"
         + urlencode({"q": term, "format": "json", "no_html": 1, "skip_disambig": 1})
     )
-    results: list[SearchResult] = []
+    results: list[KetQuaTimKiem] = []
 
-    abstract = normalize_space(data.get("AbstractText", ""))
+    abstract = chuan_hoa_khoang_trang(data.get("AbstractText", ""))
     if abstract:
         results.append(
-            SearchResult(
+            KetQuaTimKiem(
                 title=data.get("Heading", term),
                 snippet=abstract,
                 link=data.get("AbstractURL", f"https://duckduckgo.com/?q={quote_plus(term)}"),
                 source="DuckDuckGo Instant Answer",
-                image=normalize_duckduckgo_image(data.get("Image", "")),
+                image=chuan_hoa_anh_duckduckgo(data.get("Image", "")),
             )
         )
 
     for topic in data.get("RelatedTopics", []):
         entries = topic.get("Topics", [topic])
         for entry in entries:
-            text = normalize_space(entry.get("Text", ""))
+            text = chuan_hoa_khoang_trang(entry.get("Text", ""))
             first_url = entry.get("FirstURL", "")
             if text and first_url:
                 results.append(
-                    SearchResult(
+                    KetQuaTimKiem(
                         title=text.split(" - ")[0][:90],
                         snippet=text,
                         link=first_url,
@@ -627,9 +627,9 @@ def fetch_duckduckgo_results(term: str) -> list[SearchResult]:
     return results
 
 
-def fetch_wikipedia_summary(term: str) -> dict[str, str]:
+def lay_tom_tat_wikipedia(term: str) -> dict[str, str]:
     try:
-        search_data = fetch_json(
+        search_data = lay_json(
             "https://en.wikipedia.org/w/api.php?"
             + urlencode(
                 {
@@ -650,7 +650,7 @@ def fetch_wikipedia_summary(term: str) -> dict[str, str]:
 
     title = matches[0]
     try:
-        summary_data = fetch_json(
+        summary_data = lay_json(
             f"https://en.wikipedia.org/api/rest_v1/page/summary/{quote_plus(title)}"
         )
     except (HTTPError, URLError, TimeoutError):
@@ -658,33 +658,33 @@ def fetch_wikipedia_summary(term: str) -> dict[str, str]:
 
     return {
         "title": summary_data.get("title", ""),
-        "extract": normalize_space(summary_data.get("extract", "")),
+        "extract": chuan_hoa_khoang_trang(summary_data.get("extract", "")),
         "url": summary_data.get("content_urls", {}).get("desktop", {}).get("page", ""),
         "image": summary_data.get("thumbnail", {}).get("source", ""),
     }
 
 
-def tao_tom_tat(results: list[SearchResult], wiki_summary: dict[str, str]) -> dict[str, Any]:
+def tao_tom_tat(results: list[KetQuaTimKiem], wiki_summary: dict[str, str]) -> dict[str, Any]:
     cac_doan_du_lieu = [wiki_summary.get("extract", "")]
     cac_doan_du_lieu.extend(result.snippet for result in results if result.snippet)
     van_ban_doi_chieu = f" {' '.join(cac_doan_du_lieu)} ".lower()
 
-    loai_thuc_the = infer_entity_type(van_ban_doi_chieu)
-    nam_sinh = extract_birth_year(van_ban_doi_chieu)
+    loai_thuc_the = suy_luan_loai_thuc_the(van_ban_doi_chieu)
+    nam_sinh = trich_xuat_nam_sinh(van_ban_doi_chieu)
     mo_ta_wiki = wiki_summary.get("extract", "")
-    ket_qua_tot_nhat = choose_best_result(results)
-    mo_ta_tu_ket_qua = ket_qua_tot_nhat.snippet if ket_qua_tot_nhat else first_non_empty([result.snippet for result in results])
-    bi_nhieu_nghia = is_ambiguous_summary(mo_ta_wiki)
+    ket_qua_tot_nhat = chon_ket_qua_tot_nhat(results)
+    mo_ta_tu_ket_qua = ket_qua_tot_nhat.snippet if ket_qua_tot_nhat else lay_gia_tri_dau_tien([result.snippet for result in results])
+    bi_nhieu_nghia = tom_tat_nhieu_nghia(mo_ta_wiki)
 
     if mo_ta_wiki and not bi_nhieu_nghia:
-        overview = translate_text(mo_ta_wiki, target_lang="vi") or mo_ta_wiki
+        overview = dich_van_ban(mo_ta_wiki, target_lang="vi") or mo_ta_wiki
     elif mo_ta_tu_ket_qua:
-        overview = translate_text(mo_ta_tu_ket_qua, target_lang="vi") or mo_ta_tu_ket_qua
+        overview = dich_van_ban(mo_ta_tu_ket_qua, target_lang="vi") or mo_ta_tu_ket_qua
     elif mo_ta_wiki:
-        overview = translate_text(mo_ta_wiki, target_lang="vi") or mo_ta_wiki
+        overview = dich_van_ban(mo_ta_wiki, target_lang="vi") or mo_ta_wiki
     else:
         overview = "Chưa lấy được mô tả rõ ràng cho từ khóa này."
-    overview = shorten_text(overview, 220)
+    overview = rut_gon_van_ban(overview, 220)
 
     thong_tin_ngan: list[str] = []
     if loai_thuc_the:
@@ -703,13 +703,13 @@ def tao_tom_tat(results: list[SearchResult], wiki_summary: dict[str, str]) -> di
         "facts": thong_tin_ngan,
         "entity_type": loai_thuc_the,
         "birth_year": nam_sinh,
-        "top_matches": build_top_matches(results),
+        "top_matches": tao_ket_qua_trung_khop(results),
     }
 
 
 def danh_gia_rui_ro_trademark(
     term: str,
-    results: list[SearchResult],
+    results: list[KetQuaTimKiem],
     wiki_summary: dict[str, str],
     summary: dict[str, Any],
 ) -> dict[str, Any]:
@@ -720,10 +720,10 @@ def danh_gia_rui_ro_trademark(
     ).lower()
     tu_khoa_chuan = term.lower().strip()
     co_tin_hieu_chinh_tri = phat_hien_tin_hieu_chinh_tri(term, van_ban_gop)
-    la_thuong_hieu_lon = tu_khoa_chuan in FAMOUS_BRAND_KEYWORDS
-    la_nguoi_noi_tieng = tu_khoa_chuan in FAMOUS_PERSON_KEYWORDS
-    la_slogan_noi_tieng = tu_khoa_chuan in FAMOUS_SLOGANS
-    co_tin_hieu_ip_brand = any(keyword in van_ban_gop for keyword in IP_BRAND_HINTS)
+    la_thuong_hieu_lon = tu_khoa_chuan in TU_KHOA_THUONG_HIEU_LON
+    la_nguoi_noi_tieng = tu_khoa_chuan in TU_KHOA_NGUOI_NOI_TIENG
+    la_slogan_noi_tieng = tu_khoa_chuan in SLOGAN_NOI_TIENG
+    co_tin_hieu_ip_brand = any(keyword in van_ban_gop for keyword in GOI_Y_IP_THUONG_HIEU)
     loai_thuc_the = summary.get("entity_type")
 
     ly_do: list[str] = []
@@ -733,7 +733,7 @@ def danh_gia_rui_ro_trademark(
         diem += 45
         ly_do.append("Có nhắc trực tiếp trademark")
 
-    if any(keyword in van_ban_gop for keyword in TRADEMARK_KEYWORDS):
+    if any(keyword in van_ban_gop for keyword in TU_KHOA_THUONG_HIEU):
         diem += 30
         ly_do.append("Tên giống thương hiệu")
 
@@ -755,15 +755,15 @@ def danh_gia_rui_ro_trademark(
 
     if la_thuong_hieu_lon:
         diem = max(diem, 85)
-        ly_do.append(f"Trùng thương hiệu {to_display_name(tu_khoa_chuan)}")
+        ly_do.append(f"Trùng thương hiệu {tao_ten_hien_thi(tu_khoa_chuan)}")
 
     if la_slogan_noi_tieng:
         diem = max(diem, 88)
-        ly_do.append(f"Trùng slogan của {FAMOUS_SLOGANS[tu_khoa_chuan]}")
+        ly_do.append(f"Trùng slogan của {SLOGAN_NOI_TIENG[tu_khoa_chuan]}")
 
     if la_nguoi_noi_tieng:
         diem = max(diem, 82)
-        ly_do.append(f"Trùng public figure {FAMOUS_PERSON_DISPLAY.get(tu_khoa_chuan, to_display_name(tu_khoa_chuan))}")
+        ly_do.append(f"Trùng public figure {TEN_HIEN_THI_NGUOI_NOI_TIENG.get(tu_khoa_chuan, tao_ten_hien_thi(tu_khoa_chuan))}")
 
     if co_tin_hieu_chinh_tri:
         diem = max(diem, 70)
@@ -778,14 +778,14 @@ def danh_gia_rui_ro_trademark(
         diem = max(diem, 65)
         ly_do.append(f"Trademark có class liên quan POD: {ngu_canh_class['classes_text']}")
 
-    phan_tich_ban_quyen = assess_copyright_risk(
+    phan_tich_ban_quyen = danh_gia_rui_ro_ban_quyen(
         term=term,
         combined_text=van_ban_gop,
         is_famous_brand=la_thuong_hieu_lon,
         has_ip_brand_signals=co_tin_hieu_ip_brand,
         is_famous_slogan=la_slogan_noi_tieng,
     )
-    phan_tich_nguoi_noi_tieng = assess_public_figure_risk(
+    phan_tich_nguoi_noi_tieng = danh_gia_rui_ro_nguoi_noi_tieng(
         term=term,
         combined_text=van_ban_gop,
         is_political=co_tin_hieu_chinh_tri,
@@ -793,7 +793,7 @@ def danh_gia_rui_ro_trademark(
         entity_type=loai_thuc_the,
     )
 
-    phan_tich_trademark = build_analysis_block(
+    phan_tich_trademark = tao_khoi_phan_tich(
         title="Trademark risk",
         score=diem,
         reasons=ly_do,
@@ -805,16 +805,16 @@ def danh_gia_rui_ro_trademark(
             else "Chưa thấy dấu hiệu thương hiệu mạnh"
         ),
     )
-    nhan_ngu_canh = detect_context_tags(term, van_ban_gop)
+    nhan_ngu_canh = phat_hien_nhan_ngu_canh(term, van_ban_gop)
 
-    phan_tich_quyen_so_huu_tri_tue = build_ip_rights_analysis(
+    phan_tich_quyen_so_huu_tri_tue = tao_phan_tich_quyen_so_huu_tri_tue(
         phan_tich_trademark,
         phan_tich_ban_quyen,
         phan_tich_nguoi_noi_tieng,
     )
     cac_phan_tich = [phan_tich_trademark, phan_tich_ban_quyen, phan_tich_nguoi_noi_tieng, phan_tich_quyen_so_huu_tri_tue]
     diem_tong = max(phan_tich["score"] for phan_tich in cac_phan_tich)
-    ly_do_tong = collect_overall_reasons(cac_phan_tich)
+    ly_do_tong = gom_ly_do_tong(cac_phan_tich)
     ly_do_chinh = ly_do_tong[0] if ly_do_tong else ""
 
     if diem_tong >= 70:
@@ -863,14 +863,14 @@ def danh_gia_rui_ro_trademark(
         "level_class": level_class,
         "verdict": verdict,
         "action_recommendation": tao_khuyen_nghi_hanh_dong(level, diem_tong, cac_phan_tich),
-        "explanation": build_risk_explanation(term, level, ly_do_tong, cac_phan_tich, summary, ngu_canh_class),
+        "explanation": tao_giai_thich_rui_ro(term, level, ly_do_tong, cac_phan_tich, summary, ngu_canh_class),
         "matched_elements": ly_do_tong[:3],
         "confidence_level": tao_muc_tin_cay(diem_tong, ly_do_tong, results),
         "advanced_breakdown": tao_phan_tich_chi_tiet(term, diem_tong, cac_phan_tich, nhan_ngu_canh, ngu_canh_class),
-        "design_safe": build_design_safe_notes(term, diem_tong, ly_do_tong),
+        "design_safe": tao_ghi_chu_an_toan_thiet_ke(term, diem_tong, ly_do_tong),
         "trademark_records": [],
         "official_sources": tao_nguon_tra_cuu_chinh_thuc(term),
-        "top_label": build_top_label(
+        "top_label": tao_nhan_chinh(
             term=term,
             context_tags=nhan_ngu_canh,
             trademark_analysis=phan_tich_trademark,
@@ -900,7 +900,7 @@ def danh_gia_rui_ro_trademark(
     }
 
 
-def build_risk_explanation(
+def tao_giai_thich_rui_ro(
     term: str,
     level: str,
     overall_reasons: list[str],
@@ -939,8 +939,8 @@ def build_risk_explanation(
             "Nếu dùng trên áo/POD, rủi ro nằm ở chữ Nike, dấu swoosh, slogan, hình giày hoặc phong cách campaign thể thao "
             "gợi Nike. Nên đổi sang mô tả trung tính như sport energy, urban running hoặc active lifestyle."
         )
-    if term_lower in FAMOUS_SLOGANS:
-        owner = FAMOUS_SLOGANS[term_lower]
+    if term_lower in SLOGAN_NOI_TIENG:
+        owner = SLOGAN_NOI_TIENG[term_lower]
         return (
             f"Tên '{term}' rủi ro cao vì là slogan nổi tiếng gắn với {owner}. "
             "Nếu đưa slogan này lên áo, title, tag hoặc mockup bán hàng, rủi ro trademark trực tiếp rất cao; "
@@ -952,8 +952,8 @@ def build_risk_explanation(
             "Nếu dùng trong title, tag, artwork hoặc quảng cáo, rủi ro chính nằm ở tên/mặt người thật, slogan tranh cử, "
             "năm bầu cử hoặc nội dung ủng hộ/công kích chính trị; dễ bị giới hạn quảng cáo hoặc gỡ nội dung."
         )
-    if term_lower in FAMOUS_PERSON_KEYWORDS:
-        display_name = FAMOUS_PERSON_DISPLAY.get(term_lower, to_display_name(term_lower))
+    if term_lower in TU_KHOA_NGUOI_NOI_TIENG:
+        display_name = TEN_HIEN_THI_NGUOI_NOI_TIENG.get(term_lower, tao_ten_hien_thi(term_lower))
         return (
             f"Tên '{term}' rủi ro cao vì trùng tên người nổi tiếng {display_name}. "
             "Nếu dùng để bán áo/POD, tránh dùng trực tiếp tên, mặt, chữ ký, lyric, số áo hoặc biệt danh nhận diện; "
@@ -1010,10 +1010,10 @@ def trich_xuat_class_trademark(text: str) -> list[int]:
 
 
 def tao_ngu_canh_class(classes: list[int]) -> dict[str, Any]:
-    relevant = [class_number for class_number in classes if class_number in POD_RELEVANT_TRADEMARK_CLASSES]
+    relevant = [class_number for class_number in classes if class_number in CLASS_TRADEMARK_POD_LIEN_QUAN]
     classes_text = ", ".join(f"Class {class_number}" for class_number in classes) if classes else "chưa thấy class rõ"
     relevant_text = ", ".join(
-        f"Class {class_number} ({POD_RELEVANT_TRADEMARK_CLASSES[class_number]})"
+        f"Class {class_number} ({CLASS_TRADEMARK_POD_LIEN_QUAN[class_number]})"
         for class_number in relevant
     )
     pod_classes_text = "Class 16/21/25"
@@ -1046,7 +1046,7 @@ def tao_ngu_canh_class(classes: list[int]) -> dict[str, Any]:
     }
 
 
-def tao_muc_tin_cay(score: int, reasons: list[str], results: list[SearchResult]) -> str:
+def tao_muc_tin_cay(score: int, reasons: list[str], results: list[KetQuaTimKiem]) -> str:
     if score >= 70 and reasons:
         return "Cao"
     if score >= 35 or results:
@@ -1086,7 +1086,7 @@ def dich_ten_nhom_phan_tich(title: str) -> str:
     return translations.get(title, title)
 
 
-def build_design_safe_notes(term: str, score: int, reasons: list[str]) -> list[str]:
+def tao_ghi_chu_an_toan_thiet_ke(term: str, score: int, reasons: list[str]) -> list[str]:
     if score < 35:
         return [
             f"Có thể dùng '{term}' nếu chỉ là mô tả chung, không copy hình/logo có sẵn.",
@@ -1132,7 +1132,7 @@ def build_design_safe_notes(term: str, score: int, reasons: list[str]) -> list[s
     return notes
 
 
-def assess_copyright_risk(
+def danh_gia_rui_ro_ban_quyen(
     term: str,
     combined_text: str,
     is_famous_brand: bool,
@@ -1146,7 +1146,7 @@ def assess_copyright_risk(
     direct_copyright = False
     indirect_copyright = False
 
-    if any(keyword in combined_text for keyword in COPYRIGHT_KEYWORDS):
+    if any(keyword in combined_text for keyword in TU_KHOA_BAN_QUYEN):
         score += 45
         direct_copyright = True
         reasons.append("Gắn với phim/IP/nhân vật")
@@ -1158,28 +1158,28 @@ def assess_copyright_risk(
         score += 25
         indirect_copyright = True
         reasons.append("Có dấu hiệu IP giải trí")
-    if normalized_term in POP_CULTURE_KEYWORDS:
+    if normalized_term in TU_KHOA_VAN_HOA_DAI_CHUNG:
         score = max(score, 80)
         direct_copyright = True
         reasons.append(tao_ly_do_van_hoa_dai_chung(normalized_term))
-    if normalized_term in FAMOUS_PERSON_KEYWORDS and normalized_term in ("bts", "blackpink", "newjeans", "twice", "exo", "seventeen"):
+    if normalized_term in TU_KHOA_NGUOI_NOI_TIENG and normalized_term in ("bts", "blackpink", "newjeans", "twice", "exo", "seventeen"):
         score = max(score, 75)
         direct_copyright = True
-        reasons.append(f"Trùng nhóm nhạc {to_display_name(normalized_term)}")
+        reasons.append(f"Trùng nhóm nhạc {tao_ten_hien_thi(normalized_term)}")
     if is_famous_brand and normalized_term in ("disney", "pokemon", "pikachu", "marvel"):
         score = max(score, 90)
         direct_copyright = True
-        reasons.append(f"Trùng IP lớn {to_display_name(normalized_term)}")
+        reasons.append(f"Trùng IP lớn {tao_ten_hien_thi(normalized_term)}")
     elif is_famous_slogan:
         score = max(score, 40)
         indirect_copyright = True
-        reasons.append(f"Gắn campaign của {FAMOUS_SLOGANS[normalized_term]}")
+        reasons.append(f"Gắn campaign của {SLOGAN_NOI_TIENG[normalized_term]}")
     elif is_famous_brand:
         score = max(score, 35)
         indirect_copyright = True
-        reasons.append(f"Gián tiếp qua logo/hình của {to_display_name(normalized_term)}")
+        reasons.append(f"Gián tiếp qua logo/hình của {tao_ten_hien_thi(normalized_term)}")
 
-    analysis = build_analysis_block(
+    analysis = tao_khoi_phan_tich(
         title="Copyright risk",
         score=score,
         reasons=reasons,
@@ -1198,7 +1198,7 @@ def assess_copyright_risk(
     return analysis
 
 
-def assess_public_figure_risk(
+def danh_gia_rui_ro_nguoi_noi_tieng(
     term: str,
     combined_text: str,
     is_political: bool,
@@ -1209,8 +1209,8 @@ def assess_public_figure_risk(
     score = 0
     normalized_term = term.lower().strip()
 
-    if normalized_term in FAMOUS_SLOGANS:
-        return build_analysis_block(
+    if normalized_term in SLOGAN_NOI_TIENG:
+        return tao_khoi_phan_tich(
             title="Public figure risk",
             score=0,
             reasons=[],
@@ -1224,15 +1224,15 @@ def assess_public_figure_risk(
         reasons.append("Giống tên người thật")
     if is_famous_person:
         score = max(score, 85)
-        reasons.append(f"Trùng public figure {FAMOUS_PERSON_DISPLAY.get(normalized_term, to_display_name(normalized_term))}")
+        reasons.append(f"Trùng public figure {TEN_HIEN_THI_NGUOI_NOI_TIENG.get(normalized_term, tao_ten_hien_thi(normalized_term))}")
     if is_political:
         score = max(score, 92)
         reasons.append("Trùng nhân vật chính trị")
-    if contains_phrase(combined_text, PUBLIC_FIGURE_HINTS):
+    if co_chua_cum_tu(combined_text, GOI_Y_NGUOI_CONG_CHUNG):
         score = max(score, 75)
         reasons.append(f"Kết quả mô tả {term} là người nổi tiếng/public figure")
 
-    return build_analysis_block(
+    return tao_khoi_phan_tich(
         title="Public figure risk",
         score=score,
         reasons=reasons,
@@ -1242,7 +1242,7 @@ def assess_public_figure_risk(
     )
 
 
-def build_analysis_block(
+def tao_khoi_phan_tich(
     title: str,
     score: int,
     reasons: list[str],
@@ -1271,25 +1271,25 @@ def build_analysis_block(
     }
 
 
-def build_ip_rights_analysis(*analyses: dict[str, Any]) -> dict[str, Any]:
+def tao_phan_tich_quyen_so_huu_tri_tue(*analyses: dict[str, Any]) -> dict[str, Any]:
     score = max((analysis["score"] for analysis in analyses), default=0)
     reasons: list[str] = []
     for analysis in analyses:
         if analysis["score"] >= 35:
             reasons.extend(analysis.get("reasons", []))
 
-    return build_analysis_block(
+    return tao_khoi_phan_tich(
         title="Intellectual Property Rights",
         score=score,
         reasons=reasons or ["Tổng hợp từ trademark, copyright và public figure"],
         high_label="Có rủi ro quyền sở hữu trí tuệ cao",
         medium_label="Có tín hiệu quyền sở hữu trí tuệ cần kiểm tra",
         low_label="Chưa thấy rủi ro quyền sở hữu trí tuệ rõ",
-        consequence=build_ip_rights_consequence(score),
+        consequence=tao_hau_qua_quyen_so_huu_tri_tue(score),
     )
 
 
-def build_ip_rights_consequence(score: int) -> str:
+def tao_hau_qua_quyen_so_huu_tri_tue(score: int) -> str:
     if score >= 70:
         return (
             "Hậu quả IPR: TikTok có thể gỡ sản phẩm, ghi violation, khóa vĩnh viễn tài khoản, "
@@ -1316,7 +1316,7 @@ def tao_khuyen_nghi_hanh_dong(level: str, score: int, analyses: list[dict[str, A
     return "Khuyến nghị: Có thể dùng, nhưng vẫn nên tránh copy logo/hình ảnh/slogan có quyền."
 
 
-def collect_overall_reasons(analyses: list[dict[str, Any]]) -> list[str]:
+def gom_ly_do_tong(analyses: list[dict[str, Any]]) -> list[str]:
     ordered = sorted(analyses, key=lambda item: item["score"], reverse=True)
     reasons: list[str] = []
     for analysis in ordered:
@@ -1330,7 +1330,7 @@ def tao_de_xuat(
     trademark: dict[str, Any],
     summary: dict[str, Any],
 ) -> dict[str, list[str]]:
-    base = normalize_space(original_term or resolved_term)
+    base = chuan_hoa_khoang_trang(original_term or resolved_term)
     normalized = resolved_term.lower().strip()
     top_label = trademark.get("top_label", "")
     safe: list[str] = []
@@ -1343,44 +1343,44 @@ def tao_de_xuat(
 
     if top_label == "Brand":
         safe.extend([
-            f"Tránh dùng trực tiếp tên thương hiệu {to_display_name(normalized)}.",
+            f"Tránh dùng trực tiếp tên thương hiệu {tao_ten_hien_thi(normalized)}.",
             "Đổi sang mô tả sản phẩm trung tính, không nhắc brand.",
         ])
-        bypass.extend(make_safe_brand_variants(base))
+        bypass.extend(tao_bien_the_thuong_hieu_an_toan(base))
     elif top_label == "Slogan":
-        owner = FAMOUS_SLOGANS.get(normalized, "brand lớn")
+        owner = SLOGAN_NOI_TIENG.get(normalized, "brand lớn")
         safe.extend([
             f"Tránh dùng nguyên slogan gắn với {owner}.",
             "Đổi sang câu mới cùng tinh thần nhưng khác cấu trúc.",
         ])
-        bypass.extend(make_safe_slogan_variants(base))
+        bypass.extend(tao_bien_the_slogan_an_toan(base))
     elif top_label == "Public figure" or top_label == "Politics":
         safe.extend([
             f"Tránh dùng trực tiếp tên {resolved_term}.",
             "Bỏ yếu tố người thật hoặc chính trị, đổi sang chủ đề trung tính.",
         ])
-        bypass.extend(make_safe_public_figure_variants(base))
+        bypass.extend(tao_bien_the_nguoi_noi_tieng_an_toan(base))
     elif top_label in ("Music", "Pop culture", "Copyright"):
         safe.extend([
             f"Tránh dùng trực tiếp tên {resolved_term} nếu đây là IP/nội dung giải trí.",
             "Đổi sang mô tả cảm hứng chung, không nhắc tên tác phẩm/nhân vật.",
         ])
-        bypass.extend(make_safe_pop_culture_variants(base))
+        bypass.extend(tao_bien_the_van_hoa_dai_chung_an_toan(base))
     else:
         safe.extend([
             "Tránh giữ nguyên từ khóa nếu còn nghi ngờ.",
             "Ưu tiên tên mô tả trung tính, không nhắc brand/người nổi tiếng.",
         ])
-        bypass.extend(make_variants(base, ["studio", "wear", "lab", "style"]))
+        bypass.extend(tao_bien_the(base, ["studio", "wear", "lab", "style"]))
 
     return {
-        "bypass": dedupe_preserve_order([item for item in bypass if item]),
-        "safe": dedupe_preserve_order([item for item in safe if item]),
+        "bypass": loai_trung_giu_thu_tu([item for item in bypass if item]),
+        "safe": loai_trung_giu_thu_tu([item for item in safe if item]),
     }
 
 
-def make_variants(base: str, suffixes: list[str]) -> list[str]:
-    root = simplify_term(base)
+def tao_bien_the(base: str, suffixes: list[str]) -> list[str]:
+    root = don_gian_hoa_tu_khoa(base)
     variants: list[str] = []
     for suffix in suffixes:
         if not root:
@@ -1389,8 +1389,8 @@ def make_variants(base: str, suffixes: list[str]) -> list[str]:
     return variants[:4]
 
 
-def make_safe_brand_variants(base: str) -> list[str]:
-    core = strip_risky_terms(base)
+def tao_bien_the_thuong_hieu_an_toan(base: str) -> list[str]:
+    core = bo_tu_rui_ro(base)
     if not core:
         return [
             "Classic street wear",
@@ -1406,8 +1406,8 @@ def make_safe_brand_variants(base: str) -> list[str]:
     ]
 
 
-def make_safe_slogan_variants(base: str) -> list[str]:
-    core = strip_risky_terms(base)
+def tao_bien_the_slogan_an_toan(base: str) -> list[str]:
+    core = bo_tu_rui_ro(base)
     if not core or len(core.split()) <= 1:
         return [
             "Make your move",
@@ -1423,8 +1423,8 @@ def make_safe_slogan_variants(base: str) -> list[str]:
     ]
 
 
-def make_safe_public_figure_variants(base: str) -> list[str]:
-    core = strip_person_terms(base)
+def tao_bien_the_nguoi_noi_tieng_an_toan(base: str) -> list[str]:
+    core = bo_tu_nguoi_noi_tieng(base)
     if not core or core == "neutral":
         return [
             "Election theme shirt",
@@ -1440,8 +1440,8 @@ def make_safe_public_figure_variants(base: str) -> list[str]:
     ]
 
 
-def make_safe_pop_culture_variants(base: str) -> list[str]:
-    core = strip_risky_terms(base)
+def tao_bien_the_van_hoa_dai_chung_an_toan(base: str) -> list[str]:
+    core = bo_tu_rui_ro(base)
     if not core:
         return [
             "Classic adventure tee",
@@ -1457,8 +1457,8 @@ def make_safe_pop_culture_variants(base: str) -> list[str]:
     ]
 
 
-def simplify_term(value: str) -> str:
-    cleaned = normalize_space(value)
+def don_gian_hoa_tu_khoa(value: str) -> str:
+    cleaned = chuan_hoa_khoang_trang(value)
     if not cleaned:
         return ""
     tokens = [token for token in re.split(r"[\s,_-]+", cleaned) if token]
@@ -1467,13 +1467,13 @@ def simplify_term(value: str) -> str:
     return " ".join(kept[:2]) if kept else cleaned
 
 
-def strip_risky_terms(value: str) -> str:
-    cleaned = simplify_term(value)
+def bo_tu_rui_ro(value: str) -> str:
+    cleaned = don_gian_hoa_tu_khoa(value)
     risky_phrases = (
-        list(FAMOUS_BRAND_KEYWORDS)
-        + list(FAMOUS_PERSON_KEYWORDS)
-        + list(FAMOUS_SLOGANS.keys())
-        + list(POP_CULTURE_KEYWORDS)
+        list(TU_KHOA_THUONG_HIEU_LON)
+        + list(TU_KHOA_NGUOI_NOI_TIENG)
+        + list(SLOGAN_NOI_TIENG.keys())
+        + list(TU_KHOA_VAN_HOA_DAI_CHUNG)
     )
     risky_tokens = {
         token
@@ -1484,14 +1484,14 @@ def strip_risky_terms(value: str) -> str:
     return " ".join(kept).strip()
 
 
-def strip_person_terms(value: str) -> str:
-    cleaned = simplify_term(value)
+def bo_tu_nguoi_noi_tieng(value: str) -> str:
+    cleaned = don_gian_hoa_tu_khoa(value)
     person_tokens = {"donald", "trump", "taylor", "swift", "ronaldo", "messi", "bts"}
     kept = [token for token in cleaned.split() if token.lower() not in person_tokens]
     return " ".join(kept) or "neutral"
 
 
-def build_top_label(
+def tao_nhan_chinh(
     term: str,
     context_tags: list[str],
     trademark_analysis: dict[str, Any],
@@ -1512,7 +1512,7 @@ def build_top_label(
     ):
         return "Public figure"
     if copyright_analysis["score"] >= max(trademark_analysis["score"], public_figure_analysis["score"]):
-        if normalized_term in POP_CULTURE_KEYWORDS:
+        if normalized_term in TU_KHOA_VAN_HOA_DAI_CHUNG:
             return "Pop culture"
         if "Music" in context_tags:
             return "Music"
@@ -1524,10 +1524,10 @@ def build_top_label(
     return "Review"
 
 
-def detect_context_tags(term: str, combined_text: str) -> list[str]:
+def phat_hien_nhan_ngu_canh(term: str, combined_text: str) -> list[str]:
     normalized_term = term.lower().strip()
     tags: list[str] = []
-    if any(keyword in combined_text for keyword in ("movie", "film", "tv series")) or normalized_term in POP_CULTURE_KEYWORDS:
+    if any(keyword in combined_text for keyword in ("movie", "film", "tv series")) or normalized_term in TU_KHOA_VAN_HOA_DAI_CHUNG:
         tags.append("Phim / văn hóa đại chúng")
     if any(keyword in combined_text for keyword in ("meme", "viral", "internet culture")):
         tags.append("Meme / văn hóa mạng")
@@ -1540,26 +1540,26 @@ def detect_context_tags(term: str, combined_text: str) -> list[str]:
 
 def phat_hien_tin_hieu_chinh_tri(term: str, combined_text: str) -> bool:
     normalized_term = term.lower().strip()
-    if normalized_term in POP_CULTURE_KEYWORDS:
+    if normalized_term in TU_KHOA_VAN_HOA_DAI_CHUNG:
         return False
-    if any(hint in combined_text for hint in FICTIONAL_CONTEXT_HINTS):
+    if any(hint in combined_text for hint in GOI_Y_NGU_CANH_HU_CAU):
         return False
-    return contains_phrase(combined_text, POLITICAL_KEYWORDS)
+    return co_chua_cum_tu(combined_text, TU_KHOA_CHINH_TRI)
 
 
 def phat_hien_tin_hieu_am_nhac(term: str, combined_text: str) -> bool:
     normalized_term = term.lower().strip()
-    if normalized_term not in FAMOUS_PERSON_KEYWORDS and normalized_term not in POP_CULTURE_KEYWORDS:
-        if not contains_phrase(combined_text, STRONG_MUSIC_HINTS):
+    if normalized_term not in TU_KHOA_NGUOI_NOI_TIENG and normalized_term not in TU_KHOA_VAN_HOA_DAI_CHUNG:
+        if not co_chua_cum_tu(combined_text, GOI_Y_AM_NHAC_MANH):
             return False
-    if contains_phrase(combined_text, ("rabbit", "animal", "mammal", "species", "pet")):
+    if co_chua_cum_tu(combined_text, ("rabbit", "animal", "mammal", "species", "pet")):
         return False
     return True
 
 
 def tao_ly_do_van_hoa_dai_chung(normalized_term: str) -> str:
-    display_name = to_display_name(normalized_term)
-    context = POP_CULTURE_CONTEXT.get(normalized_term, "")
+    display_name = tao_ten_hien_thi(normalized_term)
+    context = NGU_CANH_VAN_HOA_DAI_CHUNG.get(normalized_term, "")
     if context and context.lower() != normalized_term:
         return f"Trùng IP/nhân vật {display_name} trong {context}"
     return f"Trùng IP văn hóa đại chúng {display_name}"
@@ -1587,8 +1587,8 @@ def uu_tien_ly_do_cu_the(reasons: list[str]) -> list[str]:
 
 def gop_ly_do_ip_lien_quan(reasons: list[str]) -> list[str]:
     normalized_reasons = list(reasons)
-    for brand in FAMOUS_BRAND_KEYWORDS:
-        display = to_display_name(brand)
+    for brand in TU_KHOA_THUONG_HIEU_LON:
+        display = tao_ten_hien_thi(brand)
         related = [
             reason
             for reason in normalized_reasons
@@ -1609,8 +1609,8 @@ def gop_ly_do_ip_lien_quan(reasons: list[str]) -> list[str]:
             if reason not in related and reason not in generic_noise
         ]
         normalized_reasons.append(f"Trùng IP/thương hiệu lớn {display}")
-    for person in FAMOUS_PERSON_KEYWORDS:
-        display = FAMOUS_PERSON_DISPLAY.get(person, to_display_name(person))
+    for person in TU_KHOA_NGUOI_NOI_TIENG:
+        display = TEN_HIEN_THI_NGUOI_NOI_TIENG.get(person, tao_ten_hien_thi(person))
         related = [
             reason
             for reason in normalized_reasons
@@ -1654,19 +1654,19 @@ def gop_ly_do_ip_lien_quan(reasons: list[str]) -> list[str]:
     return normalized_reasons
 
 
-def infer_entity_type(evidence_text: str) -> str:
-    compact = normalize_space(remove_accents(evidence_text.lower()))
-    if contains_phrase(compact, PEOPLE_HINTS):
+def suy_luan_loai_thuc_the(evidence_text: str) -> str:
+    compact = chuan_hoa_khoang_trang(bo_dau_tieng_viet(evidence_text.lower()))
+    if co_chua_cum_tu(compact, GOI_Y_CON_NGUOI):
         return "Con người"
-    if contains_phrase(compact, ("company", "brand", "startup", "corporation", "business")):
+    if co_chua_cum_tu(compact, ("company", "brand", "startup", "corporation", "business")):
         return "Công ty hoặc brand"
-    if contains_phrase(compact, ("software", "application", "platform", "service", "tool")):
+    if co_chua_cum_tu(compact, ("software", "application", "platform", "service", "tool")):
         return "Sản phẩm hoặc dịch vụ số"
     return "Chưa rõ"
 
 
-def extract_birth_year(evidence_text: str) -> str:
-    compact = remove_accents(evidence_text.lower())
+def trich_xuat_nam_sinh(evidence_text: str) -> str:
+    compact = bo_dau_tieng_viet(evidence_text.lower())
     patterns = (
         r"\bborn\s+in\s+(\d{4})\b",
         r"\bborn\s+(\d{4})\b",
@@ -1680,51 +1680,51 @@ def extract_birth_year(evidence_text: str) -> str:
     return ""
 
 
-def fetch_json(url: str) -> Any:
-    return json.loads(fetch_text(url))
+def lay_json(url: str) -> Any:
+    return json.loads(lay_text(url))
 
 
-def fetch_text(url: str) -> str:
-    request = Request(url, headers=DEFAULT_HEADERS)
+def lay_text(url: str) -> str:
+    request = Request(url, headers=TIEU_DE_MAC_DINH)
     with urlopen(request, timeout=10) as response:
         charset = response.headers.get_content_charset() or "utf-8"
         return response.read().decode(charset, errors="replace")
 
 
-def strip_html(raw_html: str) -> str:
+def bo_html(raw_html: str) -> str:
     text = re.sub(r"<.*?>", " ", raw_html)
-    return normalize_space(unescape(text))
+    return chuan_hoa_khoang_trang(unescape(text))
 
 
-def normalize_space(value: str) -> str:
+def chuan_hoa_khoang_trang(value: str) -> str:
     return re.sub(r"\s+", " ", value or "").strip()
 
 
-def remove_accents(value: str) -> str:
+def bo_dau_tieng_viet(value: str) -> str:
     source = "àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ"
     target = "aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd"
     return value.translate(str.maketrans(source, target))
 
 
-def first_non_empty(values: list[str]) -> str:
+def lay_gia_tri_dau_tien(values: list[str]) -> str:
     for value in values:
-        cleaned = normalize_space(value)
+        cleaned = chuan_hoa_khoang_trang(value)
         if cleaned:
             return cleaned
     return ""
 
 
-def choose_best_result(results: list[SearchResult]) -> SearchResult | None:
+def chon_ket_qua_tot_nhat(results: list[KetQuaTimKiem]) -> KetQuaTimKiem | None:
     scored_results = []
     for result in results:
-        snippet = normalize_space(result.snippet)
+        snippet = chuan_hoa_khoang_trang(result.snippet)
         if not snippet:
             continue
         score = len(snippet)
         lowered = f"{result.title} {snippet}".lower()
         if "may refer to" in lowered:
             score -= 200
-        if any(keyword in lowered for keyword in PEOPLE_HINTS):
+        if any(keyword in lowered for keyword in GOI_Y_CON_NGUOI):
             score += 40
         if any(keyword in lowered for keyword in ("company", "brand", "product", "service")):
             score += 25
@@ -1736,13 +1736,13 @@ def choose_best_result(results: list[SearchResult]) -> SearchResult | None:
     return scored_results[0][1]
 
 
-def infer_term_from_results(original_term: str, results: list[SearchResult]) -> str:
+def suy_luan_tu_khoa_tu_ket_qua(original_term: str, results: list[KetQuaTimKiem]) -> str:
     candidates: dict[str, int] = {}
     original_lower = original_term.lower()
 
     for result in results[:5]:
-        for candidate in split_title_candidates(result.title):
-            cleaned = cleanup_candidate(candidate)
+        for candidate in tach_ung_vien_tu_tieu_de(result.title):
+            cleaned = lam_sach_ung_vien(candidate)
             if not cleaned:
                 continue
             lowered = cleaned.lower()
@@ -1762,9 +1762,9 @@ def infer_term_from_results(original_term: str, results: list[SearchResult]) -> 
     return max(candidates.items(), key=lambda item: item[1])[0]
 
 
-def should_prefer_inferred_term(original_term: str, inferred_term: str) -> bool:
-    original = normalize_space(original_term)
-    inferred = cleanup_candidate(inferred_term)
+def nen_uu_tien_tu_khoa_suy_luan(original_term: str, inferred_term: str) -> bool:
+    original = chuan_hoa_khoang_trang(original_term)
+    inferred = lam_sach_ung_vien(inferred_term)
     if not original or not inferred:
         return False
 
@@ -1774,14 +1774,14 @@ def should_prefer_inferred_term(original_term: str, inferred_term: str) -> bool:
         return False
     if len(inferred.split()) <= len(original.split()):
         return False
-    if not contains_phrase(inferred_lower, (original_lower,)):
+    if not co_chua_cum_tu(inferred_lower, (original_lower,)):
         return False
     if len(inferred.split()) > 4:
         return False
     return True
 
 
-def split_title_candidates(title: str) -> list[str]:
+def tach_ung_vien_tu_tieu_de(title: str) -> list[str]:
     separators = (" - ", " | ", " – ", ": ")
     parts = [title]
     for separator in separators:
@@ -1792,8 +1792,8 @@ def split_title_candidates(title: str) -> list[str]:
     return [part.strip() for part in parts if part.strip()]
 
 
-def cleanup_candidate(value: str) -> str:
-    cleaned = normalize_space(re.sub(r"\s*\([^)]*\)", "", value))
+def lam_sach_ung_vien(value: str) -> str:
+    cleaned = chuan_hoa_khoang_trang(re.sub(r"\s*\([^)]*\)", "", value))
     cleaned = re.sub(r"^[^\w]+|[^\w]+$", "", cleaned)
     if not cleaned:
         return ""
@@ -1812,34 +1812,34 @@ def cleanup_candidate(value: str) -> str:
     return cleaned
 
 
-def extract_quoted_term(text: str) -> str:
+def trich_xuat_tu_trong_ngoac(text: str) -> str:
     match = re.search(r'"([^"]+)"', text) or re.search(r"'([^']+)'", text)
     if match:
-        return normalize_space(match.group(1))
+        return chuan_hoa_khoang_trang(match.group(1))
     return ""
 
 
-def extract_known_entities_from_input(text: str) -> list[str]:
-    compact = normalize_space(remove_accents(text.lower()))
+def trich_xuat_thuc_the_da_biet(text: str) -> list[str]:
+    compact = chuan_hoa_khoang_trang(bo_dau_tieng_viet(text.lower()))
     candidates = sorted(
-        set(FAMOUS_PERSON_KEYWORDS + FAMOUS_BRAND_KEYWORDS + tuple(FAMOUS_SLOGANS.keys()) + POP_CULTURE_KEYWORDS),
+        set(TU_KHOA_NGUOI_NOI_TIENG + TU_KHOA_THUONG_HIEU_LON + tuple(SLOGAN_NOI_TIENG.keys()) + TU_KHOA_VAN_HOA_DAI_CHUNG),
         key=lambda item: len(item),
         reverse=True,
     )
     matches: list[str] = []
     for candidate in candidates:
-        if contains_phrase(compact, (candidate,)):
-            matches.append(to_display_name(candidate))
-    matches = dedupe_preserve_order(matches)
-    return remove_substring_duplicates(matches)
+        if co_chua_cum_tu(compact, (candidate,)):
+            matches.append(tao_ten_hien_thi(candidate))
+    matches = loai_trung_giu_thu_tu(matches)
+    return bo_cum_con_bi_trung(matches)
 
 
-def extract_input_entity_candidates(text: str) -> list[str]:
-    tokens = re.findall(r"[A-Za-z0-9][A-Za-z0-9'&.-]*", normalize_space(text))
+def trich_xuat_ung_vien_dau_vao(text: str) -> list[str]:
+    tokens = re.findall(r"[A-Za-z0-9][A-Za-z0-9'&.-]*", chuan_hoa_khoang_trang(text))
     if not tokens:
         return []
 
-    meaningful = [token for token in tokens if token.lower() not in GENERIC_INPUT_WORDS]
+    meaningful = [token for token in tokens if token.lower() not in TU_CHUNG_DAU_VAO]
     if not meaningful:
         return []
 
@@ -1848,20 +1848,20 @@ def extract_input_entity_candidates(text: str) -> list[str]:
     for window in range(max_window, 0, -1):
         for start in range(0, len(meaningful) - window + 1):
             chunk = meaningful[start : start + window]
-            candidate = normalize_space(" ".join(chunk))
+            candidate = chuan_hoa_khoang_trang(" ".join(chunk))
             if not candidate:
                 continue
-            if candidate.lower() in GENERIC_INPUT_WORDS:
+            if candidate.lower() in TU_CHUNG_DAU_VAO:
                 continue
             if len(candidate) <= 2:
                 continue
             candidates.append(candidate)
 
-    candidates = dedupe_preserve_order([to_display_name(candidate) for candidate in candidates])
-    return remove_substring_duplicates(candidates[:3])
+    candidates = loai_trung_giu_thu_tu([tao_ten_hien_thi(candidate) for candidate in candidates])
+    return bo_cum_con_bi_trung(candidates[:3])
 
 
-def dedupe_preserve_order(values: list[str]) -> list[str]:
+def loai_trung_giu_thu_tu(values: list[str]) -> list[str]:
     seen: set[str] = set()
     result: list[str] = []
     for value in values:
@@ -1873,7 +1873,7 @@ def dedupe_preserve_order(values: list[str]) -> list[str]:
     return result
 
 
-def remove_substring_duplicates(values: list[str]) -> list[str]:
+def bo_cum_con_bi_trung(values: list[str]) -> list[str]:
     kept: list[str] = []
     lowered_values = [value.lower() for value in values]
     for index, value in enumerate(values):
@@ -1890,7 +1890,7 @@ def remove_substring_duplicates(values: list[str]) -> list[str]:
     return kept
 
 
-def to_display_name(value: str) -> str:
+def tao_ten_hien_thi(value: str) -> str:
     special_names = {
         "coca cola": "Coca-Cola",
         "coca-cola": "Coca-Cola",
@@ -1941,20 +1941,20 @@ def to_display_name(value: str) -> str:
     return special_names.get(value.lower(), value.title())
 
 
-def build_top_matches(results: list[SearchResult]) -> list[str]:
+def tao_ket_qua_trung_khop(results: list[KetQuaTimKiem]) -> list[str]:
     matches: list[str] = []
     for result in results[:2]:
-        title = normalize_space(result.title)
-        snippet = normalize_space(result.snippet)
+        title = chuan_hoa_khoang_trang(result.title)
+        snippet = chuan_hoa_khoang_trang(result.snippet)
         if title and snippet:
-            matches.append(f"{title}: {shorten_text(snippet, 90)}")
+            matches.append(f"{title}: {rut_gon_van_ban(snippet, 90)}")
         elif title:
             matches.append(title)
     return matches
 
 
-def is_ambiguous_summary(text: str) -> bool:
-    compact = normalize_space(text).lower()
+def tom_tat_nhieu_nghia(text: str) -> bool:
+    compact = chuan_hoa_khoang_trang(text).lower()
     ambiguous_markers = (
         "may refer to",
         "can refer to",
@@ -1965,14 +1965,14 @@ def is_ambiguous_summary(text: str) -> bool:
     return any(marker in compact for marker in ambiguous_markers)
 
 
-def has_google_api_credentials() -> bool:
+def co_cau_hinh_google_api() -> bool:
     api_key = (settings.GOOGLE_API_KEY or "").strip()
     cse_id = (settings.GOOGLE_CSE_ID or "").strip()
     invalid_values = {"", "YOUR_GOOGLE_API_KEY", "YOUR_CX", "YOUR_GOOGLE_CSE_ID"}
     return api_key not in invalid_values and cse_id not in invalid_values
 
 
-def contains_phrase(text: str, phrases: tuple[str, ...]) -> bool:
+def co_chua_cum_tu(text: str, phrases: tuple[str, ...]) -> bool:
     for phrase in phrases:
         pattern = r"\b" + re.escape(phrase) + r"\b"
         if re.search(pattern, text):
@@ -1980,13 +1980,13 @@ def contains_phrase(text: str, phrases: tuple[str, ...]) -> bool:
     return False
 
 
-def translate_text(text: str, target_lang: str = "vi") -> str:
-    cleaned = normalize_space(text)
+def dich_van_ban(text: str, target_lang: str = "vi") -> str:
+    cleaned = chuan_hoa_khoang_trang(text)
     if not cleaned:
         return ""
 
     try:
-        data = fetch_json(
+        data = lay_json(
             "https://translate.googleapis.com/translate_a/single?"
             + urlencode(
                 {
@@ -2008,45 +2008,45 @@ def translate_text(text: str, target_lang: str = "vi") -> str:
     for item in data[0]:
         if isinstance(item, list) and item:
             translated_parts.append(item[0])
-    return normalize_space("".join(translated_parts))
+    return chuan_hoa_khoang_trang("".join(translated_parts))
 
 
-def shorten_text(text: str, limit: int) -> str:
-    cleaned = normalize_space(text)
+def rut_gon_van_ban(text: str, limit: int) -> str:
+    cleaned = chuan_hoa_khoang_trang(text)
     if len(cleaned) <= limit:
         return cleaned
     shortened = cleaned[:limit].rsplit(" ", 1)[0].strip()
     return f"{shortened}..."
 
 
-def chon_anh_hien_thi(wiki_summary: dict[str, str], results: list[SearchResult]) -> str:
-    image = normalize_space(wiki_summary.get("image", ""))
+def chon_anh_hien_thi(wiki_summary: dict[str, str], results: list[KetQuaTimKiem]) -> str:
+    image = chuan_hoa_khoang_trang(wiki_summary.get("image", ""))
     if image:
         return image
     for result in results:
-        if normalize_space(result.image):
+        if chuan_hoa_khoang_trang(result.image):
             return result.image
     return ""
 
 
-def extract_google_result_image(item: dict[str, Any]) -> str:
+def trich_xuat_anh_google(item: dict[str, Any]) -> str:
     pagemap = item.get("pagemap", {})
     thumbnails = pagemap.get("cse_thumbnail", [])
     if thumbnails:
-        src = normalize_space(thumbnails[0].get("src", ""))
+        src = chuan_hoa_khoang_trang(thumbnails[0].get("src", ""))
         if src:
             return src
     metatags = pagemap.get("metatags", [])
     for tag in metatags:
         for key in ("og:image", "twitter:image"):
-            value = normalize_space(tag.get(key, ""))
+            value = chuan_hoa_khoang_trang(tag.get(key, ""))
             if value:
                 return value
     return ""
 
 
-def normalize_duckduckgo_image(value: str) -> str:
-    image = normalize_space(value)
+def chuan_hoa_anh_duckduckgo(value: str) -> str:
+    image = chuan_hoa_khoang_trang(value)
     if not image:
         return ""
     if image.startswith("//"):
@@ -2054,3 +2054,4 @@ def normalize_duckduckgo_image(value: str) -> str:
     if image.startswith("/"):
         return f"https://duckduckgo.com{image}"
     return image
+

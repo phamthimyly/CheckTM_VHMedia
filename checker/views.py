@@ -72,8 +72,8 @@ def dashboard(request):
 
 @user_passes_test(la_admin, login_url="login")
 def quan_ly_tai_khoan(request):
-    User = get_user_model()
-    danh_sach_tai_khoan = User.objects.annotate(
+    TaiKhoan = get_user_model()
+    danh_sach_tai_khoan = TaiKhoan.objects.annotate(
         so_lan_check=Count("lich_su_kiem_tra"),
         so_keyword_rui_ro=Count("lich_su_kiem_tra", filter=Q(lich_su_kiem_tra__co_rui_ro=True)),
     ).order_by("-is_superuser", "username")

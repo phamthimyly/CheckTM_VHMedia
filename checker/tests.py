@@ -1,20 +1,20 @@
-from django.test import SimpleTestCase
+﻿from django.test import SimpleTestCase
 
 from .services import (
-    SearchResult,
+    KetQuaTimKiem,
     danh_gia_rui_ro_trademark,
-    extract_birth_year,
-    infer_term_from_results,
-    should_prefer_inferred_term,
+    trich_xuat_nam_sinh,
+    suy_luan_tu_khoa_tu_ket_qua,
+    nen_uu_tien_tu_khoa_suy_luan,
     tach_tu_khoa_chinh,
     tao_tom_tat,
 )
 
 
-class ServiceTests(SimpleTestCase):
+class KiemThuDichVu(SimpleTestCase):
     def test_lay_nam_sinh_tu_doan_tieu_su(self):
         doan_van = "Taylor Swift is an American singer-songwriter born 1989 in Pennsylvania."
-        self.assertEqual(extract_birth_year(doan_van), "1989")
+        self.assertEqual(trich_xuat_nam_sinh(doan_van), "1989")
 
     def test_ten_nguoi_noi_tieng_co_rui_ro_su_dung_cao(self):
         tom_tat = tao_tom_tat(
@@ -53,16 +53,16 @@ class ServiceTests(SimpleTestCase):
 
     def test_uu_tien_ten_day_du_khi_google_goi_y_ro(self):
         ket_qua = [
-            SearchResult(
+            KetQuaTimKiem(
                 title="Benson Boone - Official Website",
                 snippet="Benson Boone is an American singer-songwriter.",
                 link="https://example.com",
                 source="Example",
             )
         ]
-        ten_suy_ra = infer_term_from_results("Benson", ket_qua)
+        ten_suy_ra = suy_luan_tu_khoa_tu_ket_qua("Benson", ket_qua)
         self.assertEqual(ten_suy_ra, "Benson Boone")
-        self.assertTrue(should_prefer_inferred_term("Benson", ten_suy_ra))
+        self.assertTrue(nen_uu_tien_tu_khoa_suy_luan("Benson", ten_suy_ra))
 
     def test_ca_si_tim_tu_google_phai_la_rui_ro_cao(self):
         tom_tat = tao_tom_tat(
@@ -107,3 +107,4 @@ class ServiceTests(SimpleTestCase):
         )
         rui_ro_ban_quyen = next(muc for muc in bao_cao["analyses"] if muc["title"] == "Copyright risk")
         self.assertEqual(rui_ro_ban_quyen["score"], 0)
+
