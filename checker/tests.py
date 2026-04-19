@@ -48,6 +48,12 @@ class KiemThuDichVu(SimpleTestCase):
     def test_tach_tu_khoa_chinh_tim_duoc_harry_potter_trong_title_dai(self):
         self.assertEqual(tach_tu_khoa_chinh("Harry Potter Hogwarts Shirt"), ["Harry Potter", "Hogwarts"])
 
+    def test_tach_duoc_brand_va_ten_rieng_trong_cung_title(self):
+        self.assertEqual(tach_tu_khoa_chinh("Benson Boone Nike concert shirt"), ["Nike", "Benson Boone"])
+
+    def test_tach_duoc_nhieu_ip_trong_title_dai(self):
+        self.assertEqual(tach_tu_khoa_chinh("Funny Disney Mickey Mouse Shirt"), ["Mickey Mouse", "Disney"])
+
     def test_tach_duoc_cum_chinh_voi_ten_la(self):
         self.assertEqual(tach_tu_khoa_chinh("Nirvexa premium retro shirt"), ["Nirvexa"])
 

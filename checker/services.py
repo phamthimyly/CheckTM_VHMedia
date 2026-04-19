@@ -120,6 +120,7 @@ TU_KHOA_THUONG_HIEU_LON = (
     "disney",
     "pikachu",
     "pokemon",
+    "mickey mouse",
     "marvel",
     "avengers",
     "nike",
@@ -242,12 +243,18 @@ TU_KHOA_VAN_HOA_DAI_CHUNG = (
     "barbie girl",
     "pokemon",
     "pikachu",
+    "mickey mouse",
+    "mickey",
     "marvel",
     "avengers",
     "disney",
     "harry potter",
     "hogwarts",
     "star wars",
+    "batman",
+    "superman",
+    "snoopy",
+    "minions",
 )
 
 NGU_CANH_VAN_HOA_DAI_CHUNG = {
@@ -256,6 +263,8 @@ NGU_CANH_VAN_HOA_DAI_CHUNG = {
     "avengers": "Marvel",
     "pikachu": "Pokemon",
     "pokemon": "Pokemon",
+    "mickey": "Disney",
+    "mickey mouse": "Disney",
     "barbie": "Barbie",
     "barbie girl": "Barbie",
     "kill bill": "Kill Bill",
@@ -298,6 +307,7 @@ TU_CHUNG_DAU_VAO = {
     "cap",
     "classic",
     "cool",
+    "concert",
     "cute",
     "design",
     "edition",
@@ -330,6 +340,7 @@ TU_CHUNG_DAU_VAO = {
     "tee",
     "the",
     "theme",
+    "tour",
     "tshirt",
     "t-shirt",
     "vintage",
@@ -415,8 +426,6 @@ def tach_tu_khoa_chinh(term: str) -> list[str]:
         return [quoted]
 
     direct_matches = trich_xuat_thuc_the_da_biet(cleaned)
-    if direct_matches:
-        return direct_matches
 
     if len(cleaned.split()) <= 2:
         ket_qua_ban_dau = lay_ket_qua_tim_kiem(cleaned)
@@ -425,9 +434,11 @@ def tach_tu_khoa_chinh(term: str) -> list[str]:
             return [ten_day_du]
         return [cleaned]
 
-    input_candidates = trich_xuat_ung_vien_dau_vao(cleaned)
-    if input_candidates:
-        return input_candidates
+    phan_chua_biet = bo_cum_da_biet_khoi_cau(cleaned, direct_matches)
+    input_candidates = trich_xuat_ung_vien_dau_vao(phan_chua_biet)
+    candidates = loc_ung_vien_check([*direct_matches, *input_candidates])
+    if candidates:
+        return candidates
 
     if len(cleaned.split()) <= 4:
         return [cleaned]
@@ -1844,7 +1855,7 @@ def trich_xuat_ung_vien_dau_vao(text: str) -> list[str]:
         return []
 
     candidates: list[str] = []
-    max_window = min(3, len(meaningful))
+    max_window = min(2, len(meaningful))
     for window in range(max_window, 0, -1):
         for start in range(0, len(meaningful) - window + 1):
             chunk = meaningful[start : start + window]
@@ -1859,6 +1870,39 @@ def trich_xuat_ung_vien_dau_vao(text: str) -> list[str]:
 
     candidates = loai_trung_giu_thu_tu([tao_ten_hien_thi(candidate) for candidate in candidates])
     return bo_cum_con_bi_trung(candidates[:3])
+
+
+def bo_cum_da_biet_khoi_cau(text: str, known_terms: list[str]) -> str:
+    cleaned = chuan_hoa_khoang_trang(text)
+    for term in sorted(known_terms, key=len, reverse=True):
+        if not term:
+            continue
+        cleaned = re.sub(rf"\b{re.escape(term)}\b", " ", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(rf"\b{re.escape(term.replace('-', ' '))}\b", " ", cleaned, flags=re.IGNORECASE)
+    return chuan_hoa_khoang_trang(cleaned)
+
+
+def loc_ung_vien_check(values: list[str], limit: int = 5) -> list[str]:
+    values = [chuan_hoa_khoang_trang(value) for value in values if chuan_hoa_khoang_trang(value)]
+    values = loai_trung_giu_thu_tu(values)
+    kept: list[str] = []
+    for value in values:
+        lowered = value.lower()
+        if lowered in TU_CHUNG_DAU_VAO or len(lowered) <= 2:
+            continue
+        la_cum_rui_ro_da_biet = bo_dau_tieng_viet(lowered) in set(
+            TU_KHOA_NGUOI_NOI_TIENG
+            + TU_KHOA_THUONG_HIEU_LON
+            + tuple(SLOGAN_NOI_TIENG.keys())
+            + TU_KHOA_VAN_HOA_DAI_CHUNG
+        )
+        bi_bao_phu = any(lowered != other.lower() and lowered in other.lower() for other in kept)
+        if bi_bao_phu and not la_cum_rui_ro_da_biet:
+            continue
+        kept.append(value)
+        if len(kept) >= limit:
+            break
+    return kept
 
 
 def loai_trung_giu_thu_tu(values: list[str]) -> list[str]:
@@ -1904,6 +1948,8 @@ def tao_ten_hien_thi(value: str) -> str:
         "disney": "Disney",
         "pikachu": "Pikachu",
         "pokemon": "Pokemon",
+        "mickey": "Mickey Mouse",
+        "mickey mouse": "Mickey Mouse",
         "marvel": "Marvel",
         "avengers": "Avengers",
         "harry potter": "Harry Potter",
@@ -1913,6 +1959,10 @@ def tao_ten_hien_thi(value: str) -> str:
         "gucci": "Gucci",
         "louis vuitton": "Louis Vuitton",
         "hello kitty": "Hello Kitty",
+        "batman": "Batman",
+        "superman": "Superman",
+        "snoopy": "Snoopy",
+        "minions": "Minions",
         "mcdonald": "McDonald",
         "apple": "Apple",
         "samsung": "Samsung",
