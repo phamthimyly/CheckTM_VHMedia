@@ -3,6 +3,7 @@ from django.contrib.auth.models import update_last_login
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.db import OperationalError, ProgrammingError
 from django.db.models import Count, Q
 from django.shortcuts import redirect, render
@@ -23,6 +24,19 @@ GOI_Y_TU_KHOA = [
 ]
 
 user_logged_in.disconnect(update_last_login, dispatch_uid="update_last_login")
+
+DA_CHAY_MIGRATE_TU_DONG = False
+
+
+def dam_bao_database_san_sang() -> None:
+    global DA_CHAY_MIGRATE_TU_DONG
+    if DA_CHAY_MIGRATE_TU_DONG:
+        return
+    try:
+        call_command("migrate", interactive=False, verbosity=0)
+        DA_CHAY_MIGRATE_TU_DONG = True
+    except Exception:
+        return
 
 
 def lay_lich_su_session(request) -> list[dict]:
@@ -75,6 +89,7 @@ def xoa_toan_bo_lich_su_session(request) -> None:
 
 
 def tao_admin_mac_dinh() -> None:
+    dam_bao_database_san_sang()
     TaiKhoan = get_user_model()
     ten_dang_nhap = "Phamly"
     mat_khau = "Phamlyy0212@"
@@ -98,7 +113,7 @@ def dang_nhap(request):
     tao_admin_mac_dinh()
 
     if request.user.is_authenticated:
-        return redirect("dashboard")
+        return redirect("home")
 
     loi = ""
     if request.method == "POST":
@@ -125,6 +140,7 @@ def dang_xuat(request):
 
 @login_required
 def dashboard(request):
+    dam_bao_database_san_sang()
     lich_su_session = lay_lich_su_session(request)
     try:
         thong_ke = LichSuKiemTra.objects.filter(user=request.user).aggregate(
@@ -167,17 +183,46 @@ def dashboard(request):
 
 @user_passes_test(la_admin, login_url="login")
 def quan_ly_tai_khoan(request):
+    dam_bao_database_san_sang()
     TaiKhoan = get_user_model()
+    loi = ""
+    thanh_cong = ""
+
+    if request.method == "POST":
+        ten_dang_nhap = (request.POST.get("username") or "").strip()
+        mat_khau = request.POST.get("password") or ""
+        la_quan_tri = request.POST.get("is_admin") == "on"
+        if not ten_dang_nhap or not mat_khau:
+            loi = "Hay nhap day du tai khoan va mat khau."
+        elif TaiKhoan.objects.filter(username=ten_dang_nhap).exists():
+            loi = "Tai khoan nay da ton tai."
+        else:
+            tai_khoan = TaiKhoan.objects.create_user(username=ten_dang_nhap, password=mat_khau)
+            tai_khoan.is_active = True
+            tai_khoan.is_staff = la_quan_tri
+            tai_khoan.is_superuser = la_quan_tri
+            tai_khoan.save()
+            thanh_cong = f"Da tao tai khoan {ten_dang_nhap}."
+
     danh_sach_tai_khoan = TaiKhoan.objects.annotate(
         so_lan_check=Count("lich_su_kiem_tra"),
         so_keyword_rui_ro=Count("lich_su_kiem_tra", filter=Q(lich_su_kiem_tra__co_rui_ro=True)),
     ).order_by("-is_superuser", "username")
-    return render(request, "accounts.html", {"danh_sach_tai_khoan": danh_sach_tai_khoan})
+    return render(
+        request,
+        "accounts.html",
+        {
+            "danh_sach_tai_khoan": danh_sach_tai_khoan,
+            "loi": loi,
+            "thanh_cong": thanh_cong,
+        },
+    )
 
 
 def luu_lich_su_check(request, bao_cao: dict) -> None:
     if not request.user.is_authenticated:
         return
+    dam_bao_database_san_sang()
     muc_rui_ro = bao_cao.get("trademark", {}).get("level", "Thấp")
     diem_rui_ro = int(bao_cao.get("trademark", {}).get("score", 0) or 0)
     luu_lich_su_session(request, bao_cao, diem_rui_ro, muc_rui_ro)
@@ -194,6 +239,7 @@ def luu_lich_su_check(request, bao_cao: dict) -> None:
         pass
 
 
+@login_required
 def home(request):
     tu_khoa = ""
     bao_cao = None
