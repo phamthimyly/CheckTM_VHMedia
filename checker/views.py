@@ -189,20 +189,49 @@ def quan_ly_tai_khoan(request):
     thanh_cong = ""
 
     if request.method == "POST":
-        ten_dang_nhap = (request.POST.get("username") or "").strip()
-        mat_khau = request.POST.get("password") or ""
-        la_quan_tri = request.POST.get("is_admin") == "on"
-        if not ten_dang_nhap or not mat_khau:
-            loi = "Hay nhap day du tai khoan va mat khau."
-        elif TaiKhoan.objects.filter(username=ten_dang_nhap).exists():
-            loi = "Tai khoan nay da ton tai."
-        else:
-            tai_khoan = TaiKhoan.objects.create_user(username=ten_dang_nhap, password=mat_khau)
-            tai_khoan.is_active = True
-            tai_khoan.is_staff = la_quan_tri
-            tai_khoan.is_superuser = la_quan_tri
-            tai_khoan.save()
-            thanh_cong = f"Da tao tai khoan {ten_dang_nhap}."
+        hanh_dong = (request.POST.get("action") or "create").strip()
+        if hanh_dong == "create":
+            ten_dang_nhap = (request.POST.get("username") or "").strip()
+            mat_khau = request.POST.get("password") or ""
+            la_quan_tri = request.POST.get("is_admin") == "on"
+            if not ten_dang_nhap or not mat_khau:
+                loi = "Hay nhap day du tai khoan va mat khau."
+            elif TaiKhoan.objects.filter(username=ten_dang_nhap).exists():
+                loi = "Tai khoan nay da ton tai."
+            else:
+                tai_khoan = TaiKhoan.objects.create_user(username=ten_dang_nhap, password=mat_khau)
+                tai_khoan.is_active = True
+                tai_khoan.is_staff = la_quan_tri
+                tai_khoan.is_superuser = la_quan_tri
+                tai_khoan.save()
+                thanh_cong = f"Da tao tai khoan {ten_dang_nhap}."
+        elif hanh_dong == "change_password":
+            user_id = request.POST.get("user_id")
+            mat_khau_moi = request.POST.get("new_password") or ""
+            try:
+                tai_khoan = TaiKhoan.objects.get(id=user_id)
+            except TaiKhoan.DoesNotExist:
+                loi = "Khong tim thay tai khoan."
+            else:
+                if not mat_khau_moi:
+                    loi = "Hay nhap mat khau moi."
+                else:
+                    tai_khoan.set_password(mat_khau_moi)
+                    tai_khoan.save()
+                    thanh_cong = f"Da doi mat khau cho {tai_khoan.username}."
+        elif hanh_dong == "delete":
+            user_id = request.POST.get("user_id")
+            try:
+                tai_khoan = TaiKhoan.objects.get(id=user_id)
+            except TaiKhoan.DoesNotExist:
+                loi = "Khong tim thay tai khoan."
+            else:
+                if tai_khoan.id == request.user.id:
+                    loi = "Khong the xoa tai khoan dang dang nhap."
+                else:
+                    ten_dang_nhap = tai_khoan.username
+                    tai_khoan.delete()
+                    thanh_cong = f"Da xoa tai khoan {ten_dang_nhap}."
 
     danh_sach_tai_khoan = TaiKhoan.objects.annotate(
         so_lan_check=Count("lich_su_kiem_tra"),

@@ -151,6 +151,40 @@
             color: var(--danger);
             background: rgba(207, 63, 45, 0.1);
         }
+        .row-actions {
+            display: grid;
+            gap: 8px;
+            min-width: 260px;
+        }
+        .password-form {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .password-form input {
+            width: 150px;
+            min-height: 36px;
+            border: 1px solid rgba(216, 110, 31, 0.24);
+            border-radius: 10px;
+            padding: 0 10px;
+            font: inherit;
+        }
+        .small-btn {
+            min-height: 36px;
+            border-radius: 10px;
+            border: 1px solid rgba(216, 110, 31, 0.22);
+            background: rgba(216, 110, 31, 0.1);
+            color: var(--accent-dark);
+            font-weight: 800;
+            cursor: pointer;
+            padding: 0 10px;
+            white-space: nowrap;
+        }
+        .small-btn.danger {
+            border-color: rgba(207, 63, 45, 0.22);
+            background: rgba(207, 63, 45, 0.1);
+            color: var(--danger);
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -238,6 +272,7 @@
                         <th>Số lần check</th>
                         <th>Keyword rủi ro</th>
                         <th>Lần đăng nhập cuối</th>
+                        <th>Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -261,10 +296,29 @@
                             <td>{{ user.so_lan_check }}</td>
                             <td>{{ user.so_keyword_rui_ro }}</td>
                             <td>{{ user.last_login|date:"d/m/Y H:i"|default:"Chưa có" }}</td>
+                            <td>
+                                <div class="row-actions">
+                                    <form class="password-form" method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="change_password">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <input type="password" name="new_password" placeholder="Mật khẩu mới" required>
+                                        <button class="small-btn" type="submit">Đổi mật khẩu</button>
+                                    </form>
+                                    {% if user.id != request.user.id %}
+                                        <form method="post" onsubmit="return confirm('Xóa tài khoản {{ user.username }}?');">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                                            <button class="small-btn danger" type="submit">Xóa tài khoản</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="6">Chưa có tài khoản.</td>
+                            <td colspan="7">Chưa có tài khoản.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
