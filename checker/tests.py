@@ -57,6 +57,9 @@ class KiemThuDichVu(SimpleTestCase):
     def test_tach_duoc_cum_chinh_voi_ten_la(self):
         self.assertEqual(tach_tu_khoa_chinh("Nirvexa premium retro shirt"), ["Nirvexa"])
 
+    def test_khong_ghep_ten_voi_tu_mo_ta_streetwear(self):
+        self.assertEqual(tach_tu_khoa_chinh("Benito Style Urban Streetwear Tee"), ["Benito"])
+
     def test_uu_tien_ten_day_du_khi_google_goi_y_ro(self):
         ket_qua = [
             KetQuaTimKiem(

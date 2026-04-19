@@ -115,7 +115,11 @@ def dang_nhap(request):
 
 
 def dang_xuat(request):
+    lich_su_check = lay_lich_su_session(request)
     logout(request)
+    if lich_su_check:
+        request.session["lich_su_check"] = lich_su_check
+        request.session.modified = True
     return redirect("home")
 
 

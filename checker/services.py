@@ -342,10 +342,12 @@ TU_CHUNG_DAU_VAO = {
     "theme",
     "tour",
     "tshirt",
+    "urban",
     "t-shirt",
     "vintage",
     "wear",
     "with",
+    "streetwear",
 }
 
 
