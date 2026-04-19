@@ -134,7 +134,7 @@ def dashboard(request):
         )
         lich_su_db = list(
             LichSuKiemTra.objects.filter(user=request.user)
-            .values("tu_khoa", "muc_rui_ro", "diem_rui_ro", "co_rui_ro", "thoi_gian")[:8]
+            .values("tu_khoa", "muc_rui_ro", "diem_rui_ro", "co_rui_ro", "thoi_gian")
         )
         for item in lich_su_db:
             item["thoi_gian_hien_thi"] = timezone.localtime(item["thoi_gian"]).strftime("%d/%m/%Y %H:%M")
@@ -151,7 +151,7 @@ def dashboard(request):
         tong_luot_check = len(lich_su_session)
         tu_khoa_an_toan = sum(1 for item in lich_su_session if not item.get("co_rui_ro"))
         tu_khoa_co_rui_ro = sum(1 for item in lich_su_session if item.get("co_rui_ro"))
-        lich_su_gan_day = lich_su_session[:8]
+        lich_su_gan_day = lich_su_session
 
     return render(
         request,

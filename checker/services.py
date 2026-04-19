@@ -51,6 +51,13 @@ GOI_Y_NGUOI_CONG_CHUNG = (
     "athlete",
     "politician",
     "president",
+    "businessman",
+    "businesswoman",
+    "entrepreneur",
+    "owner",
+    "chairman",
+    "chief executive",
+    "ceo",
     "youtuber",
     "influencer",
     "celebrity",
@@ -136,6 +143,10 @@ TU_KHOA_THUONG_HIEU_LON = (
     "google",
     "youtube",
     "tiktok",
+    "benito",
+    "benito bowl",
+    "cincinnati bengals",
+    "roblox",
 )
 
 SLOGAN_NOI_TIENG = {
@@ -147,6 +158,12 @@ SLOGAN_NOI_TIENG = {
 }
 
 TEN_HIEN_THI_NGUOI_NOI_TIENG = {
+    "benson": "Benson Boone",
+    "benson boone": "Benson Boone",
+    "josh allen": "Josh Allen",
+    "joe burrow": "Joe Burrow",
+    "robert kraft": "Robert Kraft",
+    "christian pulisic": "Christian Pulisic",
     "donald trump": "Donald Trump",
     "trump": "Donald Trump",
     "taylor swift": "Taylor Swift",
@@ -173,6 +190,12 @@ TEN_HIEN_THI_NGUOI_NOI_TIENG = {
 }
 
 TU_KHOA_NGUOI_NOI_TIENG = (
+    "benson",
+    "benson boone",
+    "josh allen",
+    "joe burrow",
+    "robert kraft",
+    "christian pulisic",
     "bts",
     "blackpink",
     "newjeans",
@@ -248,6 +271,7 @@ TU_KHOA_VAN_HOA_DAI_CHUNG = (
     "marvel",
     "avengers",
     "disney",
+    "roblox",
     "harry potter",
     "hogwarts",
     "star wars",
@@ -300,41 +324,68 @@ GOI_Y_AM_NHAC_MANH = (
 
 TU_CHUNG_DAU_VAO = {
     "a",
+    "aicase",
     "an",
     "and",
     "art",
+    "album",
     "brand",
+    "bracelet",
+    "bracelets",
+    "black",
+    "by",
     "cap",
     "classic",
+    "color",
+    "colour",
     "cool",
     "concert",
     "cute",
     "design",
+    "digital",
     "edition",
     "fan",
     "for",
+    "football",
+    "friendship",
     "funny",
+    "fans",
+    "gift",
+    "card",
+    "game",
     "graphic",
+    "halftime",
     "hat",
+    "home",
     "hoodie",
     "in",
     "inspired",
     "jacket",
+    "jersey",
     "logo",
+    "lyrics",
     "merch",
     "merchandise",
+    "multi",
     "mug",
+    "mens",
     "of",
     "official",
     "on",
     "poster",
     "premium",
     "print",
+    "puerto",
+    "rico",
+    "robux",
+    "team",
     "quote",
     "retro",
     "shirt",
     "shop",
     "sticker",
+    "stackable",
+    "street",
     "style",
     "sweater",
     "tee",
@@ -1244,6 +1295,9 @@ def danh_gia_rui_ro_nguoi_noi_tieng(
     if co_chua_cum_tu(combined_text, GOI_Y_NGUOI_CONG_CHUNG):
         score = max(score, 75)
         reasons.append(f"Kết quả mô tả {term} là người nổi tiếng/public figure")
+    if co_chua_cum_tu(combined_text, ("footballer", "athlete", "soccer player", "professional football")):
+        score = max(score, 82)
+        reasons.append(f"Kết quả mô tả {term} là vận động viên/người nổi tiếng")
 
     return tao_khoi_phan_tich(
         title="Public figure risk",
@@ -1367,13 +1421,13 @@ def tao_de_xuat(
             "Đổi sang câu mới cùng tinh thần nhưng khác cấu trúc.",
         ])
         bypass.extend(tao_bien_the_slogan_an_toan(base))
-    elif top_label == "Public figure" or top_label == "Politics":
+    elif top_label in ("Public figure", "Politics", "Music"):
         safe.extend([
             f"Tránh dùng trực tiếp tên {resolved_term}.",
-            "Bỏ yếu tố người thật hoặc chính trị, đổi sang chủ đề trung tính.",
+            "Bỏ yếu tố người thật, nghệ sĩ hoặc chính trị, đổi sang chủ đề trung tính.",
         ])
         bypass.extend(tao_bien_the_nguoi_noi_tieng_an_toan(base))
-    elif top_label in ("Music", "Pop culture", "Copyright"):
+    elif top_label in ("Pop culture", "Copyright"):
         safe.extend([
             f"Tránh dùng trực tiếp tên {resolved_term} nếu đây là IP/nội dung giải trí.",
             "Đổi sang mô tả cảm hứng chung, không nhắc tên tác phẩm/nhân vật.",
@@ -1440,10 +1494,10 @@ def tao_bien_the_nguoi_noi_tieng_an_toan(base: str) -> list[str]:
     core = bo_tu_nguoi_noi_tieng(base)
     if not core or core == "neutral":
         return [
-            "Election theme shirt",
-            "Debate quote design",
-            "Political humor tee",
-            "Campaign style graphic",
+            "Live music memory bracelet",
+            "Concert night keepsake",
+            "Fan moment stackable bracelet",
+            "Album mood accessory",
         ]
     return [
         f"{core} theme shirt",
@@ -1499,7 +1553,11 @@ def bo_tu_rui_ro(value: str) -> str:
 
 def bo_tu_nguoi_noi_tieng(value: str) -> str:
     cleaned = don_gian_hoa_tu_khoa(value)
-    person_tokens = {"donald", "trump", "taylor", "swift", "ronaldo", "messi", "bts"}
+    person_tokens = {
+        token
+        for phrase in TU_KHOA_NGUOI_NOI_TIENG
+        for token in phrase.lower().replace("'", " ").split()
+    }
     kept = [token for token in cleaned.split() if token.lower() not in person_tokens]
     return " ".join(kept) or "neutral"
 
@@ -1876,7 +1934,19 @@ def trich_xuat_ung_vien_dau_vao(text: str) -> list[str]:
 
 def bo_cum_da_biet_khoi_cau(text: str, known_terms: list[str]) -> str:
     cleaned = chuan_hoa_khoang_trang(text)
-    for term in sorted(known_terms, key=len, reverse=True):
+    terms_to_remove = set(known_terms)
+    known_lower = {term.lower() for term in known_terms}
+    aliases = (
+        TU_KHOA_NGUOI_NOI_TIENG
+        + TU_KHOA_THUONG_HIEU_LON
+        + tuple(SLOGAN_NOI_TIENG.keys())
+        + TU_KHOA_VAN_HOA_DAI_CHUNG
+    )
+    for alias in aliases:
+        if tao_ten_hien_thi(alias).lower() in known_lower:
+            terms_to_remove.add(alias)
+
+    for term in sorted(terms_to_remove, key=len, reverse=True):
         if not term:
             continue
         cleaned = re.sub(rf"\b{re.escape(term)}\b", " ", cleaned, flags=re.IGNORECASE)
@@ -1891,6 +1961,8 @@ def loc_ung_vien_check(values: list[str], limit: int = 5) -> list[str]:
     for value in values:
         lowered = value.lower()
         if lowered in TU_CHUNG_DAU_VAO or len(lowered) <= 2:
+            continue
+        if not re.search(r"[a-zA-Z]", value):
             continue
         la_cum_rui_ro_da_biet = bo_dau_tieng_viet(lowered) in set(
             TU_KHOA_NGUOI_NOI_TIENG
@@ -1973,6 +2045,16 @@ def tao_ten_hien_thi(value: str) -> str:
         "google": "Google",
         "youtube": "YouTube",
         "tiktok": "TikTok",
+        "benito": "Benito",
+        "benito bowl": "Benito Bowl",
+        "cincinnati bengals": "Cincinnati Bengals",
+        "roblox": "Roblox",
+        "benson": "Benson Boone",
+        "benson boone": "Benson Boone",
+        "josh allen": "Josh Allen",
+        "joe burrow": "Joe Burrow",
+        "robert kraft": "Robert Kraft",
+        "christian pulisic": "Christian Pulisic",
         "donald trump": "Donald Trump",
         "trump": "Trump",
         "taylor swift": "Taylor Swift",
